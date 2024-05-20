@@ -1,0 +1,31 @@
+{
+  "name": "ws-riki",
+  "type": "module",
+  "version": "0.0.1",
+  "browserslist": [
+    "defaults"
+  ],
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.5.10",
+    "@astrojs/db": "^0.10.6",
+    "astro": "^4.7.0",
+    "astro-icon": "^1.1.0",
+    "astro-robots-txt": "^1.0.0",
+    "date-fns": "^3.6.0",
+    "node-html-parser": "^6.1.13",
+    "postcss": "^8.4.38",
+    "postcss-preset-env": "^9.5.9",
+    "typescript": "^5.4.5"
+  },
+  "devDependencies": {
+    "@iconify-json/ic": "^1.1.17",
+    "tsx": "^4.10.5"
+  }
+}

@@ -1,0 +1,34 @@
+---
+import MainLayout from '@layouts/MainLayout.astro';
+import SearchHeader from '@components/SearchHeader.astro';
+import CardTile from '@components/CardTile.astro';
+
+import { db, eq, Card, Set } from 'astro:db';
+
+const { setid = "" } = Astro.params;
+console.log(setid);
+const set = await db.select().from(Set).where(eq(Set.id, setid)).get();
+
+if(!set) {
+    return new Response(null, {
+        status: 404,
+        statusText: 'Not found'
+    });
+}
+
+const cards = await db.select().from(Card).where(eq(Card.setId, set.id));
+
+---
+<MainLayout title={set.name}>
+    <SearchHeader searchText={"set:" + set.id} />
+    <main>
+        {() => {
+            if(cards?.length) {
+                return cards.map(card => <CardTile card={card} />);
+            }
+            else {
+                return <div class="no-items">This set has no cards.</div>;
+            }
+        }}
+    </main>
+</MainLayout>

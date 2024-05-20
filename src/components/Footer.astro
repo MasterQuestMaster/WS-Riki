@@ -1,0 +1,36 @@
+---
+
+---
+<footer>
+    <nav aria-label="site-links">
+        <div class="footer-column">
+            <h6>Cards</h6>
+            <ul>
+                <li><a href="/advanced">Advanced Search</a></li>
+                <li><a href="/docs/syntax">Syntax Guide</a></li>
+                <li><a href="/sets">All Sets</a></li>
+            </ul>
+        </div>
+        <div class="footer-column">
+            <h6>More</h6>
+            <ul>
+                <li><a href="https://github.com/MasterQuestMaster/WS-Riki">GitHub</a></li>
+                <li><a href="https://discord.com">Discord</a></li>
+            </ul>
+        </div>
+    </nav>
+    <section class="disclaimer-text">
+        <p>Riki is not produced by or endorsed by Bushiroad.</p>
+        <p>The card images used on this site have been obtained and re-posted from Bushiroad websites in accordance to the guidelines stated there. 
+            Re-use of these images (re-post, distribution) is strictly prohibited.<br/>
+            ©bushiroad All Rights Reserved.</p>
+        <p>Card text is provided by translators and other community members, and not vetted by Riki.</p>
+        <p>All other content ©<span id="copyright-year">2024</span> 
+            <a href="https://github.com/MasterQuestMaster">MasterQuestMaster</a>.</p>
+    </section>
+</footer>
+
+<script>
+    const yearInput = document.getElementById("copyright-year");
+    if(yearInput) yearInput.textContent = new Date().getFullYear().toString();
+</script>

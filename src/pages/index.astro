@@ -1,0 +1,17 @@
+---
+import MainLayout from "@layouts/MainLayout.astro";
+---
+
+<MainLayout>
+	<h1 class="homepage-title"><strong>Riki</strong> helps you search <strong>Weiß Schwarz</strong> cards</h1>
+	<form class="homepage-form" action="/search" accept-charset="UTF-8" method="get">
+
+		<a class="homepage-logo" rel="nofollow" title="Back to homepage" href="/">
+			<!-- Show page icon as homepage link -->
+			<img src="/favicon.svg" width="30" />
+		</a>
+
+		<input type="text" name="q" id="q" data-component="homepage-search" class="homepage-form-field" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" tabindex="1">
+		<button type="submit" class="visuallyhidden"><span class="vh">Find cards</span></button>
+	</form>
+</MainLayout>

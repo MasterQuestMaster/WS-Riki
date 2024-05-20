@@ -1,0 +1,23 @@
+---
+import { Icon } from "astro-icon/components";
+
+const { id, title, icon } = Astro.props;
+---
+<div class="reference-block" id={id}>
+    <div class="inner-flex">
+        <div class="reference-block-doc">
+  
+            <h2 class="reference-block-header">
+                <span class="reference-block-icon"> 
+                    <Icon focusable="false" aria-hidden="true" name={icon} />
+                </span>
+                {title}
+            </h2>
+        
+            <slot>No description is available for this feature.</slot>
+        </div>
+        <div class="reference-block-examples">
+            <slot name="examples">No examples are available for this feature.</slot>        
+        </div>
+    </div>
+</div>

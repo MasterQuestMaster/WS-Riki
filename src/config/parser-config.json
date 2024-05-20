@@ -1,0 +1,148 @@
+{
+    "keywords": {
+        "cardno": {
+            "description": "Card No.",
+            "type": "string",
+            "aliases": ["no", "cno"],
+            "dbColumn": "Card.cardno"
+        },
+        "name": {
+            "description": "Name",
+            "type": "string",
+            "dbColumn": "Card.name"
+        },
+        "type": {
+            "description": "Type",
+            "type": "string",
+            "aliases": ["t"],
+            "dbColumn": "Card.type",
+            "forceExactMatches": true,
+            "valueMapping": {
+                "ch": "character",
+                "ev": "event",
+                "cx": "climax" 
+            }
+        },
+        "color": {
+            "description": "Color",
+            "type": "string",
+            "aliases": ["cl"],
+            "dbColumn": "Card.color",
+            "forceExactMatches": true,
+            "valueMapping": {
+                "r": "red",
+                "g": "green",
+                "b": "blue",
+                "y": "yellow",
+                "p": "purple"
+            }
+        },
+        "rarity": {
+            "description": "Rarity",
+            "type": "string",
+            "aliases": ["r"],
+            "forceExactMatches": true,
+            "dbColumn": "Card.rarity"
+        },
+        "expansion": {
+            "description": "Expansion",
+            "type": "string",
+            "aliases": ["set", "e", "exp"],
+            "dbColumn": "Set.name"
+        },
+        "side": {
+            "description": "Side",
+            "type": "string",
+            "dbColumn": "Card.side",
+            "forceExactMatches": true,
+            "valueMapping": {
+                "weiss": "w",
+                "schwarz": "s"
+            }
+        },
+        "cost": {
+            "description": "Cost",
+            "type": "number",
+            "aliases": ["co"],
+            "dbColumn": "Card.cost",
+            "allowSearchNone": true
+        },
+        "power": {
+            "description": "Power",
+            "type": "number",
+            "aliases": ["p", "pow"],
+            "dbColumn": "Card.power",
+            "allowSearchNone": true
+        },
+        "soul": {
+            "description": "Soul",
+            "type": "number",
+            "alias": ["s"],
+            "dbColumn": "Card.soul",
+            "allowSearchNone": true
+        },
+        "trigger": {
+            "description": "Trigger",
+            "type": "array",
+            "aliases": ["tg"],
+            "dbColumn": "card.trigger",
+            "forceExactMatches": true,
+            "allowSearchNone": true,
+            "valueMapping": {
+                "wind": "return",
+                "bounce": "return",
+                "wi": "return",
+                "bc": "return",
+                "bag": "pool",
+                "bg": "pool",
+                "door": "comeback",
+                "do": "comeback",
+                "cb": "comeback",
+                "book": "draw",
+                "bk": "draw",
+                "dr": "draw",
+                "burn": "shot",
+                "bn": "shot",
+                "sh": "shot",
+                "bar": "treasure",
+                "br": "treasure",
+                "tr": "treasure",
+                "pants": "gate",
+                "pn": "gate",
+                "gt": "gate",
+                "sb": "standby",
+                "sby": "standby",
+                "ch": "choice",
+                "cho": "choice"
+            }
+        },
+        "trait": {
+            "description": "Trait",
+            "type": "array",
+            "aliases": ["tr", "attribute", "attr"],
+            "dbColumn": "Card.traits",
+            "forceExactMatches": true
+        },
+        "ability": {
+            "description": "Ability",
+            "type": "array",
+            "aliases": ["a", "text", "tx"],
+            "dbColumn": "Card.abilities",
+            "allowSearchNone": true
+        },
+        "flavor": {
+            "description": "Flavor text",
+            "type": "string",
+            "aliases": ["f"],
+            "dbColumn": "Card.flavor",
+            "allowSearchNone": true
+        },
+        "tag": {
+            "description": "Tag",
+            "type": "array",
+            "dbColumn": "Card.tags",
+            "forceExactMatches": true,
+            "allowSearchNone": true
+        }
+    }
+}

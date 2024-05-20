@@ -1,0 +1,12 @@
+---
+const { query, description } = Astro.props; 
+---
+
+<a class="reference-example" href={"/search?q=" + encodeURIComponent(query)}>
+    <span class="reference-example-text">
+        <code>{query}</code>
+        <span>
+            <slot>No description is available for this example.</slot>
+        </span>
+    </span>
+</a>

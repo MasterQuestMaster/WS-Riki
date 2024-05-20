@@ -1,0 +1,75 @@
+---
+import MainLayout from "@layouts/MainLayout.astro";
+import ReferenceBlock from "@layouts/docs/ReferenceBlock.astro";
+import ReferenceExample from "@layouts/docs/ReferenceExample.astro";
+
+import SearchHeader from "@components/SearchHeader.astro";
+---
+
+<MainLayout>
+    <SearchHeader />
+    <main>
+        <div class="reference-jump">
+            <h1>Riki Search Reference</h1>
+            <p>
+                Scryfall includes a large set of keywords and expressions
+                you can use to filter Magic cards. Jump to a section below:
+            </p>
+            <div class="reference-jump-links">
+                <ul>
+                    <li><a href="#colors" class="reference-link">Colors</a></li>
+                    <li><a href="#types" class="reference-link">Card Type</a></li>
+                    <li>Card Text</li>
+                    <li>Level/Cost/Power/Soul</li>
+                </ul>
+                <ul>
+                    <li>Neo Standard Legality</li>
+                </ul>
+            </div>
+        </div>
+
+        <ReferenceBlock id="colors" title="Colors and Color Identity" icon="crown">          
+            <p>You can find cards that are a certain color using the <code>c:</code> or <code>color:</code> keyword,
+            and cards that are a certain color identity using the <code>id:</code> or <code>identity:</code> keywords.</p>
+            
+            <p>Both sets of keywords accepts full color names like <code>blue</code>
+            or the abbreviated color letters <code>w</code>, <code>u</code>, <code>r</code>, <code>b</code> and <code>g</code>.</p>
+            
+            <p>You can use many nicknames for color sets:
+            all guild names (e.g. <code>azorius</code>), all shard names (e.g. <code>bant</code>),
+            all college names (e.g., <code>quandrix</code>),
+            all wedge names (e.g. <code>abzan</code>),
+            and the four-color nicknames <code>chaos</code>, <code>aggression</code>,
+            <code>altruism</code>, <code>growth</code>, <code>artifice</code> are supported.</p>
+            
+            <p>Use <code>c</code> or <code>colorless</code> to match colorless cards, and <code>m</code> or <code>multicolor</code> to match multicolor cards.</p>
+            
+            <p>You can use comparison expressions (<code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>, and <code>!=</code>)
+            to check against <em>ranges</em> of colors.</p>
+            
+            <p>Find cards that have a color indicator with <code>has:indicator</code>.</p>
+
+            <Fragment slot="examples">
+                <ReferenceExample query="c:rg">Cards that are red and green</ReferenceExample>
+                <ReferenceExample query="c>=uw -c:red">Cards that are at least white and blue, but not red</ReferenceExample>
+                <ReferenceExample query="id=esper t:instant">Instants that you can play with an Esper commander</ReferenceExample>
+                <ReferenceExample query="id:c t:land">Lands that you can play with a colorless commander</ReferenceExample>
+            </Fragment>
+        </ReferenceBlock>
+
+        <div style="color:gray">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+            <p>Ducimus illum dicta voluptatem exercitationem, dolor nemo eum doloremque explicabo rem et odio, modi sequi deleniti nesciunt repudiandae at, voluptatum non distinctio ut asperiores.</p>
+            <p>Modi, ad libero nostrum doloremque est quos delectus voluptatibus velit consequuntur nisi et voluptate dicta molestias quam reiciendis?</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+            <p>Ducimus illum dicta voluptatem exercitationem, dolor nemo eum doloremque explicabo rem et odio, modi sequi deleniti nesciunt repudiandae at, voluptatum non distinctio ut asperiores.</p>
+            <p>Modi, ad libero nostrum doloremque est quos delectus voluptatibus velit consequuntur nisi et voluptate dicta molestias quam reiciendis?</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+            <p>Ducimus illum dicta voluptatem exercitationem, dolor nemo eum doloremque explicabo rem et odio, modi sequi deleniti nesciunt repudiandae at, voluptatum non distinctio ut asperiores.</p>
+            <p>Modi, ad libero nostrum doloremque est quos delectus voluptatibus velit consequuntur nisi et voluptate dicta molestias quam reiciendis?</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+            <p>Ducimus illum dicta voluptatem exercitationem, dolor nemo eum doloremque explicabo rem et odio, modi sequi deleniti nesciunt repudiandae at, voluptatum non distinctio ut asperiores.</p>
+            <p>Modi, ad libero nostrum doloremque est quos delectus voluptatibus velit consequuntur nisi et voluptate dicta molestias quam reiciendis?</p>
+        </div>
+    </main>
+</MainLayout>

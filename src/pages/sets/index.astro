@@ -1,0 +1,30 @@
+---
+import MainLayout from "@layouts/MainLayout.astro";
+import SearchHeader from "@components/SearchHeader.astro";
+
+import { db, eq, Set } from 'astro:db';
+import { format } from 'date-fns';
+
+const sets = await db.select().from(Set);
+
+---
+<MainLayout>
+    <SearchHeader />
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Released</th>
+                </tr>
+            </thead>
+            <tbody>
+                { sets.map(set => 
+                    <tr>
+                        <td><a href={"/sets/" + set.id}>{set.name}</a></td>
+                        <td>{format(set.releaseDate as Date, "yyyy-MM-dd")}</td>
+                    </tr>)}
+            </tbody>
+        </table>
+    </main>
+</MainLayout>

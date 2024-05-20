@@ -1,0 +1,38 @@
+---
+import MainLayout from "@layouts/MainLayout.astro";
+import SearchHeader from "@components/SearchHeader.astro";
+
+import { db, Card, eq, and, or, isNull, sql } from 'astro:db';
+import { QueryParser, type SearchToken, type IKeywordOptions as QueryKeywordOptions } from "src/scripts/parser/queryParser";
+import { DrizzleParser, type IKeywordOptions as DrizzleKeywordOptions } from "src/scripts/parser/drizzleParser";
+import { type LogicTree } from "src/scripts/parser/logicGroup";
+
+import parserConfig from "src/config/parser-config.json";
+
+const query = Astro.url.searchParams.get("q");
+const parser = new QueryParser(parserConfig.keywords as QueryKeywordOptions);
+
+let tree: LogicTree<SearchToken>;
+
+try {
+    tree = parser.parse(query);
+} catch(error) {
+    //TODO: Show as error message below search bar on result page.
+    console.error(error);
+    return;
+}
+
+//const drizzleParser = new DrizzleParser(parserConfig.keywords as DrizzleKeywordOptions);
+//const drizzleFilterParams = drizzleParser.parseLogicTree(tree);
+
+//Now we have to build the Astro DB query based on the search expressions in the tree.
+//db.select().from(Card).where()
+
+---
+<MainLayout title={query}>
+    <SearchHeader searchText={query} />
+    <p>
+        { tree }
+    </p>
+    <!-- TODO: Show a default page if no cards were found. -->
+</MainLayout>

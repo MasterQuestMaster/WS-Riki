@@ -1,0 +1,21 @@
+---
+import HtmlHead from "@components/HtmlHead.astro";
+import SearchHeader from "@components/SearchHeader.astro";
+import Footer from "@components/Footer.astro";
+import "../styles/global.css";
+
+
+const {title, searchText} = Astro.props;
+---
+
+<!doctype html>
+<html class="no-js" lang="">
+
+<HtmlHead {title} />
+
+<body>
+    <slot />
+    <Footer />
+</body>
+
+</html>

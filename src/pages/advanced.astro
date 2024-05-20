@@ -1,0 +1,35 @@
+---
+import MainLayout from "@layouts/MainLayout.astro";
+import SearchHeader from "@components/SearchHeader.astro";
+
+//If any post data exists, we convert the post data to a query string. Then we redirect to /search with that string.
+
+if(Astro.request.method === "POST") {
+    const data = await Astro.request.formData();
+    console.log("Form Data", data);
+}
+
+---
+
+<MainLayout title="Advanced Search">
+    <SearchHeader />
+    <main>
+        <form action="/advanced" method="post">
+            <label>
+                Name:
+                <input name="name" type="text" />
+            </label>
+            <label>
+                Color:
+                <select name="color">
+                    <option>RED</option>
+                    <option>GREEN</option>
+                    <option>BLUE</option>
+                    <option>YELLOW</option>
+                    <!-- <option>PURPLE</option> -->
+                </select>
+            </label>
+            <input type="submit" value="Search with these options" />
+        </form>
+    </main>
+</MainLayout>
