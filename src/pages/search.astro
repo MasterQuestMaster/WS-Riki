@@ -1,13 +1,15 @@
 ---
 import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@components/SearchHeader.astro";
+import CardTile from "@components/CardTile.astro";
 
-import { db, Card, eq, and, or, isNull, sql } from 'astro:db';
+import { db, Card, Set, eq, and, or, isNull, sql } from 'astro:db';
 import { QueryParser, type SearchToken, type IKeywordOptions as QueryKeywordOptions } from "src/scripts/parser/queryParser";
 import { DrizzleParser, type IKeywordOptions as DrizzleKeywordOptions } from "src/scripts/parser/drizzleParser";
 import { type LogicTree } from "src/scripts/parser/logicGroup";
 
 import parserConfig from "src/config/parser-config.json";
+import type { SQLiteSelectQueryBuilder } from "drizzle-orm/sqlite-core";
 
 const query = Astro.url.searchParams.get("q");
 const parser = new QueryParser(parserConfig.keywords as QueryKeywordOptions);
@@ -16,23 +18,45 @@ let tree: LogicTree<SearchToken>;
 
 try {
     tree = parser.parse(query);
+    console.log(JSON.stringify(tree));
 } catch(error) {
     //TODO: Show as error message below search bar on result page.
     console.error(error);
+    //TODO: We have to return a proper Astro response.
     return;
 }
 
-//const drizzleParser = new DrizzleParser(parserConfig.keywords as DrizzleKeywordOptions);
-//const drizzleFilterParams = drizzleParser.parseLogicTree(tree);
+const drizzleConfig = parserConfig.keywords as DrizzleKeywordOptions;
+const drizzleParser = new DrizzleParser(drizzleConfig);
+const drizzleFilterParams =  drizzleParser.parseLogicTree(tree);
 
-//Now we have to build the Astro DB query based on the search expressions in the tree.
-//db.select().from(Card).where()
+//Check if we have any keywords that require joining of the "Set" table.
+const usedSetKeywords = Object.keys(drizzleConfig).filter((key) => {
+    return drizzleConfig[key].dbColumn.startsWith("Set") && drizzleParser.statistics.keywordUsage[key]
+});
+
+//TODO: Check if this works for dynamic query builder creation.
+//Try any to avoid type conflict.
+let dbQuery = db.select().from(Card);
+
+if(usedSetKeywords.length > 0) {
+    //TODO: this doesn't work with types. 
+    dbQuery.innerJoin(Set, eq(Set.id, Card.setId));
+}
+
+//TODO: Can't find "color" results because of case-sensitivity.
+const results = await dbQuery.where(drizzleFilterParams);
+console.log(dbQuery.toSQL());
 
 ---
 <MainLayout title={query}>
     <SearchHeader searchText={query} />
+    <p>{results.length} results found.</p>
     <p>
-        { tree }
+        { JSON.stringify(tree) }
     </p>
+    <ul>
+        { results.map( (card) => <li><CardTile card={card} /></li> ) }
+    </ul>k
     <!-- TODO: Show a default page if no cards were found. -->
 </MainLayout>

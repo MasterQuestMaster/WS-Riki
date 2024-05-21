@@ -72,3 +72,16 @@ export class LogicGroup<TokenType> {
         };
     }
 }
+
+export function negateLogicTree<TokenType>(tree: LogicTree<TokenType>, tokenNegator: (token: TokenType)=>void) {
+    //after negating everything, we need to swap and/or to be consistent.
+    tree.type = (tree.type == "and") ? "or" : "and";
+    for(const member of tree.members) {
+        if(Array.isArray(member)) {
+            member.forEach(tokenNegator);
+        }
+        else {
+            tokenNegator(member);
+        }
+    }
+}
