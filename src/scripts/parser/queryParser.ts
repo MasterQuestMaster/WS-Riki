@@ -23,7 +23,7 @@ export interface SearchStr {
 /** Parentheses group containing its own complete query. */
 export interface SearchGrp {
     type: "group",
-    members: LogicTree<SearchToken>,
+    tree: LogicTree<SearchToken>,
     isNegated?: boolean
 }
 
@@ -142,7 +142,7 @@ export class QueryParser {
             case "logop": searchToken = this.parseString(); break; //-and/-or should be a freetext search.
         }
 
-        if(searchToken) searchToken.isNegated = true;
+        if(searchToken) searchToken.isNegated = !searchToken.isNegated;
         return searchToken;
     }
 
@@ -192,7 +192,7 @@ export class QueryParser {
         this.skip("closegrp");
         return {
             type: "group",
-            members: groupStatements.getTree()
+            tree: groupStatements.getTree()
         };
     }
 

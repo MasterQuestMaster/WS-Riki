@@ -1,11 +1,10 @@
 import { db, Card, Set, eq, ne, gt, gte, lt, lte, like, and, or, 
     isNull, isNotNull, sql, notIlike, not, exists, notExists} from 'astro:db';
 
-import { Column, type SQLWrapper } from 'drizzle-orm';
+import { Table, Column, type SQL } from 'drizzle-orm';
 
-import type { LogicTree } from "./logicGroup";
 import type { SearchToken, SearchGrp, SearchStr, KeywordType } from "./queryParser";
-
+import { type LogicTree, negateLogicTree } from "./logicGroup";
 import { escapeQuotes } from '../utils';
 
 /*
@@ -43,107 +42,86 @@ export interface IKeywordOptions {
     }
 }
 
+type ParserStatistics = {
+    keywordUsage: Record<string, number>;
+}
+
 export class DrizzleParser {
     /** Contains a map for keywords to their options. */
     keywordOptions: IKeywordOptions;
+    /** Stores statistics about the parsed contents (keyword usage). */
+    statistics: ParserStatistics;
 
     constructor(options: IKeywordOptions) {
         this.keywordOptions = options;
+        this.statistics = { keywordUsage: {} };
     }
 
-    parseLogicTree(tree: LogicTree<SearchToken>, treeNegated=false): SQLWrapper|undefined {
+    parseLogicTree(tree: LogicTree<SearchToken>): SQL|undefined {
         let expressions = [];
         for (const member of tree.members) {
             if(Array.isArray(member)) {
-                //array members can only be in OR group.
-                //We must parse array children as "and" (unless tree is negated, then switch).
-                let childStatements = member.map( (x) => {
-                    if(treeNegated) x.isNegated = !x.isNegated;
-                    return this.parseMember(x, treeNegated);
-                });
-                //we need to use spread syntax to give the statements to and/or as array.
-                //in a negated tree, after negating every expression, the logic op is also swapped.
-                const func = treeNegated ? or : and;
-                expressions.push(func(...childStatements));
+                //Type for array children is opposite type of the main and (and/or vs or/and).
+                const childAndOr = tree.type == "and" ? or : and;
+                const childStatements = member.map(this.parseMember);
+                expressions.push(childAndOr(...childStatements));
             }
             else {
-                expressions.push(this.parseMember(member, treeNegated));
+                expressions.push(this.parseMember(member));
             }
         }
 
-        const func = treeNegated ? and : or;
-        return func(...expressions);
+        const mainAndOr = tree.type == "and" ? and : or;
+        return mainAndOr(...expressions); //use spread syntax for args.
     }
 
-    private parseMember(member: SearchToken, treeNegated = false) {
-        //Switch the negation status if the tree is negated.
-        if(treeNegated) member.isNegated = !member.isNegated;
+    private parseMember(member: SearchToken) {
 
         if(member.type == "group") {
-            //If negated, deep negate and swap and/or for the child logic tree.
-            return this.parseLogicTree(member.members, member.isNegated);
-        }
+            if(member.isNegated) {
+                //deeply negate the entire tree beforehand to make query construction easier.
+                negateLogicTree(member.tree, tokenNegator);
+            }
+
+            return this.parseLogicTree(member.tree);
+        } 
         else {
+            //Strings default to name search with ":".
             const keyword = member.type == "expression" ? member.keyword : "name";
-            let operator = member.type == "expression" ? member.operator : ":";
+            const operator =  member.type == "expression" ? member.operator : ":";
+
             const options = this.keywordOptions[keyword];
             const dbColumn = getColumnFromString(options.dbColumn);
+            const adjustedOp = getAdjustedOperator(operator, options.type, options.forceExactMatches);
             const value = getExpressionValue(member.value, options.type);
 
-            //number always "=" instead of ":".
-            if(options.type == "number" && operator == ":") {
-                operator = "=";
-            }
-            //for regular strings, we change the operator like this.
-            else if(options.type == "string" && options.forceExactMatches) {
-                operator = "=";
-            }
-            else if(options.type == "array" && operator == ":" && options.forceExactMatches) {
-                //:= operator: match the entire content of 1 array element. (TODO: decide if we make this available for user).
-                //: match partial content of 1 array element.
-                //= the entire array must be only this value.
-                operator = ":=";
-                //basically make sure we can't partial match the json column values?
-                //we first need to test how to even match arrays.
-            }
+            //Count how many times each keyword was used since the creation of the parser.
+            this.increaseUsageStatistic(keyword); 
 
-            return this.generateExpression(operator, dbColumn, value, member.isNegated);
+            return this.generateExpression(dbColumn, adjustedOp, value, member.type, member.isNegated);
         }
     }
 
-    private generateExpression(operator: string, column:Column, value: string|number|null, isNegated=false ) {
+    private generateExpression(column:Column, operator: string, value: string|number|null, type:string, isNegated=false ) {
         //"search none".
         if(value == null) {
             return isNegated ? isNotNull(column) : isNull(column);
         }
         
         //Array handling
-        if(column.dataType == "json") {
-            //TODO: we must also handle negated array expressions.
-            if(operator == ":") {
-                //array includes
-                //with json_each in join, we can get the values extracted
-                //so we can look for the value
-                //but can we do more than 1 json_each? probably with alias.
-                //we can however also look with like because it's ["",""] text.
-                //so we use like ( %"${value}"% ) to find exact values.
-                //and we can use a normal like for non-exact values.
-                //BUT check how we can match quotes in the values.
-                //And for ability, we must be able to match quotes in the text.
-                //we should use json_each at least for abilities.
-                //for traits, we must check if there are traits with quotes in them.
-                //assume it's possible we get them in the future as well.
+        if(type == "array") {
+            if(operator == "=") {
+                //array must be length 1 and that element must be the value.
+                //SQLite escpaes quotes in JSON strings, but when json_each is used, the quotes are unescaped.
+                const sqlVal = `["${JSON.stringify(value)}]`; //stringify wraps in quotes.
+                return maybeNegate(eq(column, sqlVal), column, isNegated);
+            }
+            else {
+                let sqlVal = escapeQuotes(<string>value); //if we search directly in the json column, we must escape "".
+                if(operator == ":=") sqlVal = `"${sqlVal}"`; //for exact match, we include the quotes.
+                return maybeNegate(like(column, `%${sqlVal}%`), column, isNegated);
 
-                //If we use json_each, how can we find a query "a:x a:y" where x and y 
-                //are in different abilities?
-                //Maybe we need a transposed table that makes the json_each abilities into columns?
-                //Or with a subquery.
-                //WHERE EXISTS(SELECT * FROM json_each(abilities) WHERE value LIKE '%a%' )
-                const compareFunc = like(column, `%${escapeQuotes(<string>value)}}%`);
-                return isNegated ? or(not(compareFunc), isNull(column)) : compareFunc;
-
-                //TODO test both variants for performance and accuracy.
-                
+                //TODO test this variant with the other for performance and accuracy.
                 /*
                 const abilityContains = db.select().from(sql`json_each(${column.table}.${column.name})`)
                     .where(sql<boolean>`json_each.value LIKE '%${value}%'`);
@@ -151,59 +129,51 @@ export class DrizzleParser {
 
                 return isNegated ? or(isNull(Card.abilities), notExists(abilityContains)) : exists(abilityContains);
                 */
-
-            }
-            else if(operator == ":=") {
-                //Exact matches on 1 array element. JSON.stringify wraps in quotes and escapes them.
-                const compareFunc = like(column, `%${JSON.stringify(value)}%`);
-                return isNegated ? or(not(compareFunc), isNull(column)) : compareFunc;
-            }
-            else if(operator == "=") {
-                //array must be length 1 and that element must be value.
-                //we can use json_array_length(column, '$') to get the length.
-                //Or we use = ["${value}"]
-                //TODO: Check how sqlite handles quotes in these JSON strings. -> They escape them.
-                //If they're escaped we must escape them too. -> Yes we have to escape them in query.
-                //Also check what happens when we use json_each. unescape or no? -> unescape.
-                const compareVal = `[${JSON.stringify(value)}]`;
-                return isNegated ? or(ne(column, compareVal), isNull(column)) : eq(column, compareVal);
-            }
-            else {
-                throw new Error("Invalid operator for arrays.");
             }
         }
         
-        //TODO: We probably can't match case-insensitively like this.
-        //We can use sql literal with sql`a like b`.
-        //We can try to see if the sqlite pragam can be set somewhere
-        //We can test if the checks are already CI (unlikely).
-        //We can check for ILIKE operator.
-        //Since "notILike" is apparently a thing in astro, maybe we can use not(notILike).
-        //Also the bottom code is just for string/number.
-
-        //Note: In SQLite Browser, PRAGMA Case-Sensitive Like is DISABLED!
-
-        //we cannot use < as negated version of >= because NULL exists, so use not().
-        let expression;
+        //TODO: Check case insensitive matching.
+        //String or Number
+        let expression: SQL;
         if(operator == ":") expression = like(column, `%${value}%`);
         else if(operator == "=") expression = eq(column, value);
         else if(operator == "<") expression = lt(column, value);
         else if(operator == ">") expression = gt(column, value);
         else if(operator == "<=") expression = lte(column, value);
         else if(operator == ">=") expression = gte(column, value);
-        else throw new Error("Invalid operator for expression");
+        else throw new Error(`Invalid operator for ${type} expression`);
 
-        return isNegated ? or(not(expression), isNull(column)) : expression;
+        return maybeNegate(expression, column, isNegated);
+    }
+
+    private increaseUsageStatistic(keyword:string) {
+        const usage = this.statistics.keywordUsage;
+        usage[keyword] = (usage[keyword] ?? 0) + 1;
+    }
+
+    private resetStatistics() {
+        this.statistics = { keywordUsage: {} };
     }
 }
 
 function getColumnFromString(columnStr: string): Column {
-    //sanity check, since the data comes from a config.
-    if(!/\w+\.\w+/.test(columnStr)) {
-        throw new Error(`Invalid DB Column "${columnStr}". Expected "table.column".`);
-    }
+    const [tableName,columnName] = columnStr.split(".");
+    const table = getTableFromName(tableName);
 
-    return eval(columnStr);
+    if(!table)
+        throw new Error(`Invalid table ${tableName}.`);
+
+    if(!columnName || !Object.hasOwn(table, columnName))
+        throw new Error(`Invalid DB Column "${columnStr}". Expected "table.column".`);
+
+    const column = columnName as keyof typeof table;
+    return table[column] as Column;
+}
+
+function getTableFromName(tableName: string) {
+    if(tableName == "Card") return Card;
+    if(tableName == "Set") return Set;
+    return null;
 }
 
 function getExpressionValue(value: string|null, type: KeywordType) {
@@ -212,6 +182,26 @@ function getExpressionValue(value: string|null, type: KeywordType) {
     return value;
 }
 
-function lower(col:Column) {
-    return sql<string>`lower(${col})`;
+function getAdjustedOperator(operator: string, type: KeywordType, forceExactMatches=false) {
+    if(type == "number" && operator == ":") return "="; //number always "=" instead of ":".
+    if(type == "string" && forceExactMatches) return "="; //regular string (exact matches): always "=".
+    if(type == "array" && operator == ":" && forceExactMatches) return ":="; //":=" instead of ":" (match 1 entry exactly)
+    return operator;
+}
+
+//Negator function for "negateLogicTree".
+function tokenNegator(token:SearchToken) {
+    //Recursively negate group members.
+    if(token.type == "group") {
+        negateLogicTree(token.tree, tokenNegator);
+    }
+
+    //this also applies for groups, because after the inner negate, the flag can be removed.
+    token.isNegated = !token.isNegated;
+}
+
+//If negate is specified, apply not, but also include null rows.
+function maybeNegate(expression: SQL, nullColumn: Column, isNegated:boolean) {
+    //(NOT (col > 5) OR col IS NULL)
+    return isNegated ? or(not(expression), isNull(nullColumn)) : expression;
 }
