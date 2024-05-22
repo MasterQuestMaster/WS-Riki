@@ -16,15 +16,22 @@ const parser = new QueryParser(parserConfig.keywords as QueryKeywordOptions);
 
 let tree: LogicTree<SearchToken>;
 
-try {
+//Parser Bugs:
+//(color:yellow or t:climax) level:0 -> the lv0 was ignored.
+//  -> With multiple statements, only the first is done?
+//  -> the "activeMember" being a reference didn't work.
+//     the activeMember is changed without the entry in members being updated.
+//Search "trait:none" doesn't get replaced with null.  
+
+//try {
     tree = parser.parse(query);
     console.log(JSON.stringify(tree));
-} catch(error) {
-    //TODO: Show as error message below search bar on result page.
-    console.error(error);
-    //TODO: We have to return a proper Astro response.
-    return;
-}
+//} catch(error) {
+    ////TODO: Show as error message below search bar on result page.
+    //console.error(error);
+    ////TODO: We have to return a proper Astro response.
+//  return;
+//}
 
 const drizzleConfig = parserConfig.keywords as DrizzleKeywordOptions;
 const drizzleParser = new DrizzleParser(drizzleConfig);
@@ -35,18 +42,51 @@ const usedSetKeywords = Object.keys(drizzleConfig).filter((key) => {
     return drizzleConfig[key].dbColumn.startsWith("Set") && drizzleParser.statistics.keywordUsage[key]
 });
 
-//TODO: Check if this works for dynamic query builder creation.
-//Try any to avoid type conflict.
-let dbQuery = db.select().from(Card);
+
+//IMPORTANT: The result structure changes if we include a join.
+//It becomes {Card:{id,name,...},Set:{id,name,...}}.
+//We can avoid this by specifying all the columns in the Select.
+
+//The Card._... does not exist at runtime.
+//To get something from there we have to read symbols:
+//Card[Object.getOwnPropertySymbols(Card).filter(s=>s.description=="drizzle:Name")[0]]
+
+//Surely there's a way to make these column selections conciser.
+//Maybe: Object.entries(Card.id).filter(([key,val]) => val.name) to get cols.
+
+const cardColumns = {
+    id: Card.id,
+    cardno: Card.cardno,
+    name: Card.name,
+    type: Card.type,
+    color: Card.color,
+    rarity: Card.rarity,
+    setId: Card.setId,
+    side: Card.side,
+    level: Card.level,
+    cost: Card.cost,
+    power: Card.power,
+    soul: Card.soul,
+    trigger: Card.trigger,
+    traits: Card.traits,
+    abilities: Card.abilities,
+    flavor: Card.flavor,
+    tags: Card.tags,
+    image: Card.image
+}
+
+let dbQuery = db.select(cardColumns).from(Card);
 
 if(usedSetKeywords.length > 0) {
-    //TODO: this doesn't work with types. 
+
     dbQuery.innerJoin(Set, eq(Set.id, Card.setId));
 }
 
 //TODO: Can't find "color" results because of case-sensitivity.
 const results = await dbQuery.where(drizzleFilterParams);
+console.log("Results:" + JSON.stringify(results));
 console.log(dbQuery.toSQL());
+
 
 ---
 <MainLayout title={query}>

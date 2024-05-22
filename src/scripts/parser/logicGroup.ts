@@ -14,11 +14,12 @@ export type LogicTree<TokenType> = {
 export class LogicGroup<TokenType> {
     //Top Level OR, second level AND.
     private members: Array<TokenType|TokenType[]>;
-    private activeMember: TokenType|TokenType[]|null;
+    //The index of the currently used members entry.
+    private memberIndex: number;
 
     constructor() {
         this.members = [];
-        this.activeMember = null;
+        this.memberIndex = 0;
     }
 
     /**
@@ -26,17 +27,17 @@ export class LogicGroup<TokenType> {
      * @param token A token to be added as member.
      */
     addAnd(token: TokenType) {
+        const activeMember = this.members[this.memberIndex];
         //Accumulate tokens in the same array slot.
-        if(Array.isArray(this.activeMember)) {
-            this.activeMember.push(token);
+        if(Array.isArray(activeMember)) {
+            activeMember.push(token);
         }
         //create array when 2 members are reached
-        else if(this.activeMember) {
-            this.activeMember = [this.activeMember, token];
+        else if(activeMember) {
+            this.members[this.memberIndex] = [activeMember, token];
         }
         else {
             this.members.push(token);
-            this.activeMember = token;
         }
     }
 
@@ -44,8 +45,14 @@ export class LogicGroup<TokenType> {
      * Start a new branch for adding members. All new members will go to the new branch.
      */
     or() {
+        //Only create a new path if the current path has entries.
+        const activeMember = this.members[this.memberIndex];
+        if((Array.isArray(activeMember) && activeMember.length == 0) || !activeMember) {
+            return;
+        }
+
         //This causes the next member to be added in a new slot.
-        this.activeMember = null;
+        this.memberIndex++;
     }
 
     /**
@@ -65,9 +72,12 @@ export class LogicGroup<TokenType> {
             }
         }
         else {
+            //remove empty paths on top level.
+            const populatedMembers = this.members.filter((m) => !Array.isArray(m) || m.length > 0);
+
             return {
                 type: "or",
-                members: this.members
+                members: populatedMembers
             }
         };
     }

@@ -85,7 +85,7 @@
             "description": "Trigger",
             "type": "array",
             "aliases": ["tg"],
-            "dbColumn": "card.trigger",
+            "dbColumn": "Card.trigger",
             "forceExactMatches": true,
             "allowSearchNone": true,
             "valueMapping": {
@@ -121,7 +121,8 @@
             "type": "array",
             "aliases": ["tr", "attribute", "attr"],
             "dbColumn": "Card.traits",
-            "forceExactMatches": true
+            "forceExactMatches": true,
+            "allowSearchNone": true
         },
         "ability": {
             "description": "Ability",

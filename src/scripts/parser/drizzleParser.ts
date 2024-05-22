@@ -64,15 +64,22 @@ export class DrizzleParser {
                 //Type for array children is opposite type of the main and (and/or vs or/and).
                 const childAndOr = tree.type == "and" ? or : and;
                 const childStatements = member.map(this.parseMember);
-                expressions.push(childAndOr(...childStatements));
+
+                if(childStatements.length > 0) {
+                    expressions.push(childAndOr(...childStatements));
+                }
             }
             else {
                 expressions.push(this.parseMember(member));
             }
         }
 
-        const mainAndOr = tree.type == "and" ? and : or;
-        return mainAndOr(...expressions); //use spread syntax for args.
+        if(expressions.length > 0) {
+            const mainAndOr = tree.type == "and" ? and : or;
+            return mainAndOr(...expressions);
+        }
+
+        return undefined;
     }
 
     private parseMember(member: SearchToken) {
@@ -93,16 +100,15 @@ export class DrizzleParser {
             const options = this.keywordOptions[keyword];
             const dbColumn = getColumnFromString(options.dbColumn);
             const adjustedOp = getAdjustedOperator(operator, options.type, options.forceExactMatches);
-            const value = getExpressionValue(member.value, options.type);
 
             //Count how many times each keyword was used since the creation of the parser.
             this.increaseUsageStatistic(keyword); 
 
-            return this.generateExpression(dbColumn, adjustedOp, value, member.type, member.isNegated);
+            return this.generateExpression(dbColumn, adjustedOp, member.value, options.type, member.isNegated);
         }
     }
 
-    private generateExpression(column:Column, operator: string, value: string|number|null, type:string, isNegated=false ) {
+    private generateExpression(column:Column, operator: string, value: string|null, type:"string"|"number"|"array", isNegated=false ) {
         //"search none".
         if(value == null) {
             return isNegated ? isNotNull(column) : isNull(column);
@@ -117,42 +123,37 @@ export class DrizzleParser {
                 return maybeNegate(eq(column, sqlVal), column, isNegated);
             }
             else {
-                let sqlVal = escapeQuotes(<string>value); //if we search directly in the json column, we must escape "".
+                let sqlVal = escapeQuotes(value); //if we search directly in the json column, we must escape "".
                 if(operator == ":=") sqlVal = `"${sqlVal}"`; //for exact match, we include the quotes.
                 return maybeNegate(like(column, `%${sqlVal}%`), column, isNegated);
-
-                //TODO test this variant with the other for performance and accuracy.
-                /*
-                const abilityContains = db.select().from(sql`json_each(${column.table}.${column.name})`)
-                    .where(sql<boolean>`json_each.value LIKE '%${value}%'`);
-                    //TODO: maybe need "as(name)".
-
-                return isNegated ? or(isNull(Card.abilities), notExists(abilityContains)) : exists(abilityContains);
-                */
             }
         }
-        
-        //TODO: Check case insensitive matching.
-        //String or Number
-        let expression: SQL;
-        if(operator == ":") expression = like(column, `%${value}%`);
-        else if(operator == "=") expression = eq(column, value);
-        else if(operator == "<") expression = lt(column, value);
-        else if(operator == ">") expression = gt(column, value);
-        else if(operator == "<=") expression = lte(column, value);
-        else if(operator == ">=") expression = gte(column, value);
-        else throw new Error(`Invalid operator for ${type} expression`);
+        else if(type == "string") {
+            //like is case-insensitive by default.
+            if(operator == "=") return maybeNegate(eq(lower(column), lower(value)), column, isNegated);
+            if(operator == ":") return maybeNegate(like(column, `%${value}%`), column, isNegated);
+            throw new Error(`Invalid operator (${operator}) for text expression`);
+        }
+        else {
+            const numValue = parseInt(value);
+            let expression: SQL|null = 
+                (operator == "=") ? eq(column, numValue) :
+                (operator == "<") ? lt(column, numValue) :
+                (operator == ">") ? gt(column, numValue) :
+                (operator == "<=") ? lte(column, numValue) :
+                (operator == ">=") ? gte(column, numValue) : null;
 
-        return maybeNegate(expression, column, isNegated);
+            if(!expression) {
+                throw new Error(`Invalid operator (${operator}) for numeric expression`);
+            } 
+
+            return maybeNegate(expression, column, isNegated);
+        }
     }
 
     private increaseUsageStatistic(keyword:string) {
         const usage = this.statistics.keywordUsage;
         usage[keyword] = (usage[keyword] ?? 0) + 1;
-    }
-
-    private resetStatistics() {
-        this.statistics = { keywordUsage: {} };
     }
 }
 
@@ -176,12 +177,6 @@ function getTableFromName(tableName: string) {
     return null;
 }
 
-function getExpressionValue(value: string|null, type: KeywordType) {
-    if(value == null) return null;
-    if(type == "number") return parseInt(value);
-    return value;
-}
-
 function getAdjustedOperator(operator: string, type: KeywordType, forceExactMatches=false) {
     if(type == "number" && operator == ":") return "="; //number always "=" instead of ":".
     if(type == "string" && forceExactMatches) return "="; //regular string (exact matches): always "=".
@@ -202,6 +197,12 @@ function tokenNegator(token:SearchToken) {
 
 //If negate is specified, apply not, but also include null rows.
 function maybeNegate(expression: SQL, nullColumn: Column, isNegated:boolean) {
-    //(NOT (col > 5) OR col IS NULL)
-    return isNegated ? or(not(expression), isNull(nullColumn)) : expression;
+    //For non-nullable column, we use a regular not().
+    if(isNegated && nullColumn.notNull) return not(expression);
+    if(isNegated) return or(not(expression), isNull(nullColumn));
+    return expression;
+}
+
+function lower(value: Column|string) {
+    return sql`lower(${value})`;
 }

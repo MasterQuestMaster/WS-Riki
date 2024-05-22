@@ -213,11 +213,11 @@ export class QueryParser {
         const operator = this.tokenizer.peek("expression");
 
         if(operator?.type != "op") {
-            this.tokenizer.croak(`Unexpected token in ${keyword} expression. Expected operator.`);
+            this.tokenizer.croak(`Unexpected token in "${keyword}" expression. Expected operator.`);
             return null;
         }
         else if(!isValidOperator(operator.value, kwOptions.type)) {
-            this.tokenizer.croak(`Operator ${operator.value} is invalid for keyword ${keyword}.`);
+            this.tokenizer.croak(`Operator "${operator.value}" is invalid for keyword "${keyword}".`);
             return null;
         }
         else {
@@ -232,12 +232,12 @@ export class QueryParser {
         const searchValue = this.tokenizer.peek("expression");
 
         if(!searchValue) {
-            this.tokenizer.croak(`Unexpected token in ${keyword} expression. Expected search value.`);
+            this.tokenizer.croak(`Unexpected token in "${keyword}" expression. Expected search value.`);
             return null;
         }
         else if(!isValidSearchValueType(searchValue.value, searchValue.type, kwOptions.type, kwOptions.allowSearchNone)) {
             //TODO: This is just for testing. After testing, we want to handle these error by displaying an error message and ignoring the term.
-            this.tokenizer.croak(`Type ${searchValue.type} cannot be used with ${keyword}.`);
+            this.tokenizer.croak(`Type "${searchValue.type}" cannot be used with "${keyword}".`);
             return null;
         }
         else if(searchValue.value.length == 0) {
@@ -253,7 +253,7 @@ export class QueryParser {
     private skip(type?: TokenType) {
         const current = this.tokenizer.peek();
         if (current?.type == type) this.tokenizer.next();
-        else this.tokenizer.croak(`Expected type ${type}. Got ${current?.type}.`);
+        else this.tokenizer.croak(`Expected type "${type}". Got "${current?.type}".`);
     }
 
     private isGroupClosing() {
