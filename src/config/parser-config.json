@@ -48,7 +48,11 @@
             "description": "Expansion",
             "type": "string",
             "aliases": ["set", "e", "exp"],
-            "dbColumn": "Set.name"
+            "dbColumn": [
+                "Card.setId",
+                "Set.name",
+                "Set.shortName"
+            ]
         },
         "side": {
             "description": "Side",
@@ -59,6 +63,13 @@
                 "weiss": "w",
                 "schwarz": "s"
             }
+        },
+        "level": {
+            "description": "Level",
+            "type": "number",
+            "aliases": ["l", "lv"],
+            "dbColumn": "Card.level",
+            "allowSearchNone": true
         },
         "cost": {
             "description": "Cost",
@@ -127,9 +138,13 @@
         "ability": {
             "description": "Ability",
             "type": "array",
-            "aliases": ["a", "text", "tx"],
+            "aliases": ["a", "text"],
             "dbColumn": "Card.abilities",
-            "allowSearchNone": true
+            "allowSearchNone": true,
+            "autoReplace": [
+                {"search":"<<", "replace":"《"},
+                {"search":">>", "replace":"》"}
+            ]
         },
         "flavor": {
             "description": "Flavor text",
@@ -144,6 +159,18 @@
             "dbColumn": "Card.tags",
             "forceExactMatches": true,
             "allowSearchNone": true
+        },
+        "icon": {
+            "description": "Icon",
+            "type": "array",
+            "dbColumn": "Card.icons",
+            "forceExactMatches": true,
+            "allowSearchNone": true,
+            "valueMapping": {
+                "backup": "counter",
+                "alarm": "clock",
+                "shift": "clock"
+            }
         }
     }
 }

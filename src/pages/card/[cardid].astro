@@ -3,47 +3,51 @@ import MainLayout from '@layouts/MainLayout.astro';
 import SearchHeader from '@components/SearchHeader.astro';
 
 import { db, eq, Card, Set } from 'astro:db';
+import { dbarray } from 'src/scripts/db-utils';
 
 const { cardid = "" } = Astro.params;
 console.log(cardid);
-const card = await db.select().from(Card).where(eq(Card.id, cardid)).get();
 
-if(!card) {
+const selectCardResult = await db.select().from(Card)
+    .innerJoin(Set, eq(Card.setId, Set.id))
+    .where(eq(Card.id, cardid))
+    .get();
+
+if(!selectCardResult) {
     return new Response(null, {
         status: 404,
         statusText: 'Not found'
     });
 }
 
-const set = await db.select().from(Set).where(eq(Set.id, card.setId)).get();
+const card = selectCardResult.Card;
+const set = selectCardResult.Set;
 
 ---
 <MainLayout>
     <SearchHeader />
     <main>
         <div class="card">
-            <p>Code: {card.code}</p>
+            <p>Code: {card.cardno}</p>
             <p>Card Name: {card.name}</p>
             <p>Type: {card.type}</p>
             <p>Color: {card.color}</p>
             <p>Rarity: {card.rarity}</p>
-            <p>Expansion: {set?.name}</p>
+            <p>Expansion: {set.name}</p>
             <p>Level: {card.level}</p>
             <p>Cost: {card.cost}</p>
             <p>Power: {card.power}</p>
             <p>Soul: {card.soul}</p>
             <p>
-                Trigger: {(card.trigger as String[]).map(trigger => 
+                Trigger: {dbarray(card.trigger).map(trigger => 
                 <div class="trigger-icon">{trigger}</div>)}
             </p>
             <p>
-                Traits: {(card.traits as String[]).map(trait => 
+                Traits: {dbarray(card.traits).map(trait => 
                 <div class="trait">{trait}</div>)}
             </p>
-            <p>Abilities ({(card.abilities as String[]).length}): {(card.abilities as String[]).map(ability =>
-                <p class="ability">{ability}</p>)}
-            </p>
-            <p>Tags: {(card.tags as String[]).map(tag =>
+            <p>Abilities ({dbarray(card.abilities).length}): {dbarray(card.abilities).join("\n")}</p>
+            <p>Tags: {dbarray(card.tags).map(tag =>
                 <div class="tag">{tag}</div>)}
             </p>
             <img src={card.image} alt={card.name} />

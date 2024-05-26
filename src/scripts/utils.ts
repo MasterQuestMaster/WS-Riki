@@ -1,3 +1,6 @@
+import { stringifyLogicTree } from "./parser/logicGroup";
+import type { SearchToken } from "./parser/queryParser";
+
 //Slugify: To make a text be normalized and readable for URLs.
 export function slugify(text:any) {
   return text
@@ -46,4 +49,31 @@ export function escapeQuotes(text:string|undefined) {
 
   //turn string to JSON, escaping quotes and backslashes, then strip the start/end quotes.
   return JSON.stringify(text).slice(1,-1);
+}
+
+export function stringifySearchToken(token:SearchToken): string {
+  //Recursively negate group members.
+  if(token.type == "group") {
+      return `${stringifyLogicTree(token.tree, (tk) => stringifySearchToken(tk))}`;
+  }
+  else if(token.type == "expression") {
+      return `{${token.keyword}${token.operator}"${token.value}"}`;
+  }
+  else {
+      return `{STRING:"${token.value}"}`;
+  }
+}
+
+export function objectMap<TSource,TTarget>(obj:{[index:string]: TSource}, fn:(val:TSource, key:string)=>TTarget) {
+  return Object.fromEntries(
+    Object.entries(obj).map(
+      ([key, val]) => [key, fn(val, key)]
+    )
+  );
+}
+
+export function objectFilter<T>(obj:{[index:string]: T}, fn:(val:T,key:string)=>boolean) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([key,val]) => fn(val, key))
+  );
 }

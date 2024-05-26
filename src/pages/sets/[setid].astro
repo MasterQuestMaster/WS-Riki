@@ -1,12 +1,17 @@
 ---
 import MainLayout from '@layouts/MainLayout.astro';
 import SearchHeader from '@components/SearchHeader.astro';
-import CardTile from '@components/CardTile.astro';
+import CardImageTile from '@components/CardImageTile.astro';
 
 import { db, eq, Card, Set } from 'astro:db';
+import type{SelectedFields} from 'drizzle-orm/sqlite-core';
 
+import displayConfig from "src/config/display-config.json";
+import { objectMap, objectFilter } from 'src/scripts/utils';
+import { getColumnFromString } from 'src/scripts/db-utils';
+
+//We don't join cards here so that we can show empty sets.
 const { setid = "" } = Astro.params;
-console.log(setid);
 const set = await db.select().from(Set).where(eq(Set.id, setid)).get();
 
 if(!set) {
@@ -16,7 +21,12 @@ if(!set) {
     });
 }
 
-const cards = await db.select().from(Card).where(eq(Card.setId, set.id));
+//filter "Set" columns because we already have them.
+const currentDisplayConfig = displayConfig["Image"];
+const filteredColumns = objectFilter(currentDisplayConfig.select, (val) => !val.startsWith("Set"));
+const selectColumns = objectMap(filteredColumns, getColumnFromString) //as any;
+
+const cards = await db.select(selectColumns).from(Card).where(eq(Card.setId, set.id));
 
 ---
 <MainLayout title={set.name}>
@@ -24,7 +34,7 @@ const cards = await db.select().from(Card).where(eq(Card.setId, set.id));
     <main>
         {() => {
             if(cards?.length) {
-                return cards.map(card => <CardTile card={card} />);
+                return cards.map(card => <CardImageTile card={card} />);
             }
             else {
                 return <div class="no-items">This set has no cards.</div>;

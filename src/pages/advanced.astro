@@ -1,35 +1,201 @@
 ---
 import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@components/SearchHeader.astro";
+import NumberOperator from "@components/NumberOperator.astro";
+
+import { db, Card, Set, sql } from "astro:db";
 
 //If any post data exists, we convert the post data to a query string. Then we redirect to /search with that string.
 
 if(Astro.request.method === "POST") {
     const data = await Astro.request.formData();
-    console.log("Form Data", data);
+
+    console.log("Form Data");
+    
+    /* 
+        TODO: Some cards should have multiple values that should be ORd, like
+        trigger, rarity, expansion.
+        Trait should have an option any/all.
+
+        For the level/cost/power/soul, we should have a range option with 2 sides.
+
+        For name and ability we should split the values (but keep quotes strings).
+        For name just search without keyword.
+    */
+
+    const queryArray = Array.from(data)
+        .filter(([key, val]) => val.toString().trim() && !key.endsWith("-op") )
+        .map(([key,val]) => {
+            if(key == "name" || key == "ability") {
+                //split into freetext words and quoted parts.
+                const wordPattern = /((?<qt>["']).*?[^\\](\k<qt>|$)|[^\s]+)/g;
+                //if g flag is used, the return value is a string[] with the matches.
+                let entries = val.toString().match(wordPattern) as (string[]|null);
+
+                if(key == "ability") {
+                    //append the keyword and group the entries.
+                    const withKeyword = entries?.map((entry) => `ability:${entry}`);
+                    return `(${withKeyword?.join(" ")})`;
+                }
+
+                return entries?.join(" ");
+            }
+            else if(key == "trigger" || key == "rarity" || key == "set" || key == "trait") {
+                //TODO: We can only parse this once we know the form that
+                //the triggers/rarities are going to take with a multi-value select.
+                return `${key}:${val}`;
+            }
+            else {
+                return `${key}${data.get(key+"-op") ?? ":"}${val}`;
+            }
+        });
+
+    console.log(queryArray);
+    
+    const query = queryArray.join(" ");
+    return Astro.redirect("/search?q=" + encodeURIComponent(query));
+
+    // data.forEach((value, key) => {
+    //     console.log(key, value);
+    // });
+
+    //console.log(data.getAll("icon[]"));
 }
 
+//Load expansions
+const sets = await db.select().from(Set);
+
+const traits = await db.selectDistinct({trait: sql`json_each.value`}).from(sql`${Card},json_each(${Card.traits})`)
+console.log(traits);
 ---
 
 <MainLayout title="Advanced Search">
     <SearchHeader />
     <main>
-        <form action="/advanced" method="post">
-            <label>
-                Name:
-                <input name="name" type="text" />
-            </label>
-            <label>
-                Color:
-                <select name="color">
-                    <option>RED</option>
-                    <option>GREEN</option>
-                    <option>BLUE</option>
-                    <option>YELLOW</option>
-                    <!-- <option>PURPLE</option> -->
-                </select>
-            </label>
+        <form method="post">
+            <label for="search-name">Name:</label>
+            <input name="name" id="search-name" type="text" 
+                placeholder='Any words in the name, e.g. "Akane"' />
+
+            <label for="search-ability">Ability:</label>
+            <input name="ability" id="search-ability" type="text" 
+                placeholder='Any card text, e.g. "When this card attacks"' />
+
+            <label for="search-cardno">Card No.</label>
+            <input name="cardno" id="search-cardno" type="text"
+                placeholder='Card number, e.g. "SPY/S106-E001"' />
+
+            <label for="search-type">Type:</label>
+            <select name="type" id="search-type">
+                <option value="" class="default-option">Any</option>
+                <option value="Character">Character</option>
+                <option value="Event">Event</option>
+                <option value="Climax">Climax</option>
+            </select>
+
+            <label for="search-color">Color:</label>
+            <select name="color" id="search-color">
+                <option value="" class="default-option">Any</option>
+                <option value="RED">Red</option>
+                <option value="GREEN">Green</option>
+                <option value="BLUE">Blue</option>
+                <option value="YELLOW">Yellow</option>
+                <!-- <option>Purple</option> -->
+            </select>
+
+            <label for="search-rarity">Rarity:</label>
+            <input name="rarity" id="search-rarity" type="text" list="raritylist" />
+            <datalist id="raritylist">
+                <option value="C">Common</option>
+                <option value="U">Uncommon</option>
+                <option value="R">Rare</option>
+                <option value="RR">Double Rare</option>
+                <option value="RR+">Double Rare+ </option>
+                <option value="SR">Super Rare</option>
+                <option value="RRR">Triple Rare</option>
+                <option value="OFR">Overframe Rare</option>
+                <option value="SP">Special</option>
+                <option value="SSP">Super Special Rare</option>
+                <option value="SEC">Secret Rare</option>
+                <option value="TD">Trial Deck</option>
+                <option value="PR">Promo Rare</option>
+                <option value="CC">Climax Common</option>
+                <option value="CR">Climax Rare</option>
+            </datalist>
+
+            <label for="search-set">Set</label>
+            <select name="set" id="search-set">
+                <option value="" class="default-option">Any</option>
+                {sets.map((set) => 
+                    <option value={set.id}>{set.name}</option>
+                )}
+            </select>
+
+            <label for="search-power">Power</label>
+            <NumberOperator id="search-power-op" name="power-op" label="Power Operator" />
+            <input name="power" id="search-power" type="number" min="0" max="20000" step="500"/>
+
+            <label for="search-level">Level</label>
+            <NumberOperator id="search-level-op" name="level-op" label="Level Operator" />
+            <input name="power" id="search-power" type="number" min="0" max="3" placeholder="Level (0-3)" />
+
+            <label for="search-cost">Cost</label>
+            <NumberOperator id="search-cost-op" name="cost-op" label="Cost Operator" />
+            <input name="cost" id="search-cost" type="number" min="0" max="9" />
+
+            <label for="search-soul">Soul</label>
+            <NumberOperator id="search-soul-op" name="soul-op" label="Soul Operator" />
+            <input name="soul" id="search-soul" type="number" min="0" max="3" />
+
+            <label for="search-trigger">Trigger</label>
+            <!-- 
+                TODO: Think about how to do trigger. Use pictures with checkboxes maybe.
+                This should probably be "OR", and should have the trigger combinations like
+                SOUL STANDBY, or SOUL SOUL.
+            -->
+            <input name="trigger" id="search-trigger" type="text" placeholder="A trigger like GATE." />
+
+            <label for="search-trait">Trait</label>
+            <select name="traits" id="search-trait">
+                <option value="" class="default-option">Any</option>
+                {traits.map((tr) => 
+                    <option>{tr.trait}</option>
+                )}
+
+                <label>
+                    Any
+                    <input name="traits-op" type="checkbox" value="all" />
+                    All
+                </label>
+            </select>
+
+            <label for="search-tag">Tag</label>
+            <input name="tag" id="search-tag" type="text" placeholder='A tag like "Runner"' />
+
+            <label>Icon</label>
+            <fieldset>
+                <legend class="visually-hidden">Icons</legend>
+                <div>
+                    <label>
+                        <input name="icon" value="counter" type="checkbox" />
+                        Counter
+                    </label>
+                    
+                    <label>
+                        <input name="icon" value="clock" type="checkbox" />
+                        Clock
+                    </label>
+                </div>
+            </fieldset>
+
+
             <input type="submit" value="Search with these options" />
         </form>
     </main>
 </MainLayout>
+
+<style>
+    .default-option {
+        color: gray;
+    }
+</style>

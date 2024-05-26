@@ -1,102 +1,76 @@
 ---
 import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@components/SearchHeader.astro";
-import CardTile from "@components/CardTile.astro";
+import CardImageTile from "@components/CardImageTile.astro";
 
-import { db, Card, Set, eq, and, or, isNull, sql } from 'astro:db';
-import { QueryParser, type SearchToken, type IKeywordOptions as QueryKeywordOptions } from "src/scripts/parser/queryParser";
+import { db, Card, Set, eq } from 'astro:db';
+import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "src/scripts/parser/queryParser";
 import { DrizzleParser, type IKeywordOptions as DrizzleKeywordOptions } from "src/scripts/parser/drizzleParser";
-import { type LogicTree } from "src/scripts/parser/logicGroup";
+import { stringifyLogicTree } from "src/scripts/parser/logicGroup";
+import { stringifySearchToken, objectMap } from "src/scripts/utils";
+import { getColumnFromString } from "src/scripts/db-utils";
 
 import parserConfig from "src/config/parser-config.json";
-import type { SQLiteSelectQueryBuilder } from "drizzle-orm/sqlite-core";
+import displayConfig from "src/config/display-config.json";
+
 
 const query = Astro.url.searchParams.get("q");
+
+//Parse the query into a LogicTree that can be processed further.
 const parser = new QueryParser(parserConfig.keywords as QueryKeywordOptions);
+//TODO: Show errors as error message below search bar on result page.
+let tree = parser.parse(query);
+console.log(stringifyLogicTree(tree, stringifySearchToken));
 
-let tree: LogicTree<SearchToken>;
-
-//Parser Bugs:
-//(color:yellow or t:climax) level:0 -> the lv0 was ignored.
-//  -> With multiple statements, only the first is done?
-//  -> the "activeMember" being a reference didn't work.
-//     the activeMember is changed without the entry in members being updated.
-//Search "trait:none" doesn't get replaced with null.  
-
-//try {
-    tree = parser.parse(query);
-    console.log(JSON.stringify(tree));
-//} catch(error) {
-    ////TODO: Show as error message below search bar on result page.
-    //console.error(error);
-    ////TODO: We have to return a proper Astro response.
-//  return;
-//}
-
+//Parse the Logic Tree from the Query Parser into a Drizzle "Where" clause.
 const drizzleConfig = parserConfig.keywords as DrizzleKeywordOptions;
 const drizzleParser = new DrizzleParser(drizzleConfig);
+//TODO: error handling for the possible exceptions here.
 const drizzleFilterParams =  drizzleParser.parseLogicTree(tree);
 
 //Check if we have any keywords that require joining of the "Set" table.
-const usedSetKeywords = Object.keys(drizzleConfig).filter((key) => {
-    return drizzleConfig[key].dbColumn.startsWith("Set") && drizzleParser.statistics.keywordUsage[key]
-});
-
+// const usedSetKeywords = Object.keys(drizzleConfig).filter((key) => {
+//     const dbCol = drizzleConfig[key].dbColumn;
+//     const isSetKeyword = Array.isArray(dbCol) ? dbCol.find(c=>c.startsWith("Set")) : dbCol.startsWith("Set");
+//     return isSetKeyword && drizzleParser.statistics.keywordUsage[key];
+// });
 
 //IMPORTANT: The result structure changes if we include a join.
 //It becomes {Card:{id,name,...},Set:{id,name,...}}.
 //We can avoid this by specifying all the columns in the Select.
 
-//The Card._... does not exist at runtime.
-//To get something from there we have to read symbols:
-//Card[Object.getOwnPropertySymbols(Card).filter(s=>s.description=="drizzle:Name")[0]]
+//"any" type is necessary because SelectedFields type is not compatible.
+const currentDisplayConfig = displayConfig["Image"];
+const selectColumns = objectMap<string,any>(currentDisplayConfig.select, getColumnFromString);
 
-//Surely there's a way to make these column selections conciser.
-//Maybe: Object.entries(Card.id).filter(([key,val]) => val.name) to get cols.
+//Always join Set unless we find out it impacts performance.
+let dbQuery = db.select(selectColumns)
+    .from(Card)
+    .innerJoin(Set, eq(Set.id, Card.setId));
 
-const cardColumns = {
-    id: Card.id,
-    cardno: Card.cardno,
-    name: Card.name,
-    type: Card.type,
-    color: Card.color,
-    rarity: Card.rarity,
-    setId: Card.setId,
-    side: Card.side,
-    level: Card.level,
-    cost: Card.cost,
-    power: Card.power,
-    soul: Card.soul,
-    trigger: Card.trigger,
-    traits: Card.traits,
-    abilities: Card.abilities,
-    flavor: Card.flavor,
-    tags: Card.tags,
-    image: Card.image
-}
+//If the Set table is in the WHERE or in the SELECT, join it.
+// if(usedSetKeywords.length > 0 || currentDisplayConfig.join?.includes("Set")) {
+//     dbQuery.innerJoin(Set, eq(Set.id, Card.setId));
+// }
 
-let dbQuery = db.select(cardColumns).from(Card);
-
-if(usedSetKeywords.length > 0) {
-
-    dbQuery.innerJoin(Set, eq(Set.id, Card.setId));
-}
-
-//TODO: Can't find "color" results because of case-sensitivity.
 const results = await dbQuery.where(drizzleFilterParams);
 console.log("Results:" + JSON.stringify(results));
 console.log(dbQuery.toSQL());
 
+//Redirect directly to the card detail page if only 1 result is found.
+if(results.length == 1) {
+    const cardid = results[0].id;
+    return Astro.redirect(`/card/${encodeURIComponent(cardid)}`);
+}
 
 ---
 <MainLayout title={query}>
     <SearchHeader searchText={query} />
     <p>{results.length} results found.</p>
-    <p>
-        { JSON.stringify(tree) }
-    </p>
+    <pre>{ stringifyLogicTree(tree, stringifySearchToken) }</pre>
+    <pre>{ dbQuery.toSQL().sql }</pre>
     <ul>
-        { results.map( (card) => <li><CardTile card={card} /></li> ) }
+        { results.map( (card) => <li><CardImageTile card={card} /></li> ) }
     </ul>k
     <!-- TODO: Show a default page if no cards were found. -->
 </MainLayout>

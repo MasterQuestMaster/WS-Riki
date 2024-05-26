@@ -35,16 +35,20 @@ interface LogicOp {
 
 /** Provide keywords and their configuration for the Query Parser */
 export interface IKeywordOptions {
-    [key: string]: {
-        /** Type of keyword. string|array|number. */
-        type: KeywordType,
-        /** Provide additional names that will be recognized as this keyword. */
-        aliases?: string[],
-        /** If enabled, using "-" or "none" will search for the absence of that property. Default false. */
-        allowSearchNone?:boolean,
-        /** Map certain search values to other values. */
-        valueMapping?: Record<string, string>
-    }
+    [key: string]: KeywordOption
+}
+
+interface KeywordOption {
+    /** Type of keyword. string|array|number. */
+    type: KeywordType,
+    /** Provide additional names that will be recognized as this keyword. */
+    aliases?: string[],
+    /** If enabled, using "-" or "none" will search for the absence of that property. Default false. */
+    allowSearchNone?:boolean,
+    /** Map certain search values to other values. */
+    valueMapping?: Record<string, string>,
+    /** Replace parts of values automatically */
+    autoReplace?: { search:string, replace:string }[]
 }
 
 export class QueryParser {
@@ -86,7 +90,7 @@ export class QueryParser {
 
         //All aliases are treated as separate recognizable keywords.
         const keywords = Object.keys(this.keywordAliases);
-        this.tokenizer = new Tokenizer(query, keywords, [":","=",":=","<","<=",">",">="]);
+        this.tokenizer = new Tokenizer(query, keywords, [":","=",":=","!=","<","<=",">",">="]);
 
         //Let and/or be handled automatically by this class.
         let queryStatements = new LogicGroup<SearchToken>();
@@ -246,7 +250,7 @@ export class QueryParser {
         }
         else {
             this.tokenizer.next("expression");
-            return getAdjustedSearchValue(searchValue.value, kwOptions.allowSearchNone, kwOptions.valueMapping);
+            return getAdjustedSearchValue(searchValue.value, kwOptions);
         }
     }
 
@@ -268,7 +272,7 @@ export class QueryParser {
 
 function isValidOperator(operator: string, keywordType: KeywordType) {
     //only numbers can use comparison operators.
-    if(keywordType == "number") return [":","=","<",">","<=",">="].includes(operator);
+    if(keywordType == "number") return [":","=","!=","<",">","<=",">="].includes(operator);
     //Arrays can use ":=" (match single array entry exactly).
     if(keywordType == "array" ) return [":","=",":="].includes(operator);
     //Strings can use ":" or "=".
@@ -284,19 +288,27 @@ function isValidSearchValueType(searchValue: string, tokenType: TokenType, keywo
         || (allowSearchNone && (val == "none" || val == "-"));
 }
 
-function getAdjustedSearchValue(searchValue: string, allowSearchNone=false, valueMapping?: Record<string, string>) {
+function getAdjustedSearchValue(searchValue: string, options: KeywordOption) {
     //lower case for comparisons.
-    const val = searchValue.toLowerCase();
-
-    //If a shorthand value was entered, expand to the full value.
-    if(valueMapping && valueMapping[val]) {
-        return valueMapping[val];
-    }
+    const compareVal = searchValue.toLowerCase();
+    let adjustedVal = searchValue;
 
     //Handle "Search None" option by using null as the search value.
-    if(allowSearchNone && (val == "none" || val == "-")) {
+    if(options.allowSearchNone && (compareVal == "none" || compareVal == "-")) {
         return null;
     }
 
-    return searchValue;
+    //Check auto replacing text.
+    if(options.autoReplace) {
+        options.autoReplace.forEach((repl) => 
+            adjustedVal = adjustedVal.replaceAll(repl.search, repl.replace)
+        );
+    }
+
+    //If a shorthand value was entered, expand to the full value.
+    if(options.valueMapping && options.valueMapping[compareVal]) {
+        adjustedVal = options.valueMapping[compareVal];
+    }
+
+    return adjustedVal;
 }

@@ -1,0 +1,36 @@
+---
+//Show a card in the search result or set overview.
+const { card } = Astro.props;
+
+const cardTypes: Record<string,string> = {
+    "character": "CH",
+    "event": "EV",
+    "climax": "CX"
+};
+
+---
+<tr data-card-image={card.image}>
+    <td>
+        <a href={"/card/" + card.id} tabindex="-1">{card.cardno}</a>
+    </td>
+    <td>
+        <a href={"/card/" + card.id}>{card.name}</a>
+    </td>
+    <td>
+        <a href={"/card/" + card.id} tabindex="-1" data-tooltip={card.type}>
+            { cardTypes[card.type] }
+        </a>
+    </td>
+    <td>
+        <a href={"/card/" + card.id} tabindex="-1">{card.color}</a>
+    </td>
+    <td>
+        <a href={"/card/" + card.id} tabindex="-1">{card.level}/{card.cost}</a>
+    </td>
+    <td>
+        <a href={"/card/" + card.id} tabindex="-1">{card.rarity}</a>
+    </td>
+    <td>
+        <a href={"/card/" + card.id} tabindex="-1">{card.setName}</a>
+    </td>
+</tr>

@@ -1,42 +1,19 @@
-import { db, Card, Set, eq, ne, gt, gte, lt, lte, like, and, or, 
-    isNull, isNotNull, sql, notIlike, not, exists, notExists} from 'astro:db';
+import { eq, ne, gt, gte, lt, lte, like, and, or, isNull, isNotNull, sql, not} from 'astro:db';
 
-import { Table, Column, type SQL } from 'drizzle-orm';
+import { Column, type SQL } from 'drizzle-orm';
 
-import type { SearchToken, SearchGrp, SearchStr, KeywordType } from "./queryParser";
+import type { SearchToken, KeywordType } from "./queryParser";
 import { type LogicTree, negateLogicTree } from "./logicGroup";
+import { getColumnFromString } from '../db-utils';
 import { escapeQuotes } from '../utils';
-
-/*
-type AstroColumn = typeof Card.id
-    |typeof Card.cardno
-    |typeof Card.name
-    |typeof Card.type
-    |typeof Card.color
-    |typeof Card.rarity
-    |typeof Card.setId
-    |typeof Card.side
-    |typeof Card.level
-    |typeof Card.cost
-    |typeof Card.power
-    |typeof Card.soul
-    |typeof Card.trigger
-    |typeof Card.traits
-    |typeof Card.abilities
-    |typeof Card.flavor
-    |typeof Card.tags
-    |typeof Set.name
-    |typeof Set.releaseDate
-    |typeof Set.shortName;
-*/
 
 /** Provide keywords and their configuration needed for the Drizzle Parser. */
 export interface IKeywordOptions {
     [key: string]: {
         /** Type of keyword. string|array|number */
         type: KeywordType,
-        /** DB Column reference in form "tablename.colname" */
-        dbColumn: string,
+        /** DB Column reference in form "tablename.colname". Can be array of columns. */
+        dbColumn: string | string[],
         /** If enabled, only exact matches (not partial) will be found. */
         forceExactMatches?:boolean
     }
@@ -97,14 +74,24 @@ export class DrizzleParser {
             const keyword = member.type == "expression" ? member.keyword : "name";
             const operator =  member.type == "expression" ? member.operator : ":";
 
-            const options = this.keywordOptions[keyword];
-            const dbColumn = getColumnFromString(options.dbColumn);
-            const adjustedOp = getAdjustedOperator(operator, options.type, options.forceExactMatches);
-
             //Count how many times each keyword was used since the creation of the parser.
             this.increaseUsageStatistic(keyword); 
 
-            return this.generateExpression(dbColumn, adjustedOp, member.value, options.type, member.isNegated);
+            const options = this.keywordOptions[keyword];
+            const adjustedOp = getAdjustedOperator(operator, options.type, options.forceExactMatches);
+
+            //Multiple columns should be searched as "OR".
+            if(Array.isArray(options.dbColumn)) {
+                const expressionList = options.dbColumn.map((column) => {
+                    const dbCol = getColumnFromString(column);
+                    return this.generateExpression(dbCol,adjustedOp, member.value, options.type, member.isNegated);
+                });
+
+                return or(...expressionList);
+            }
+
+            const dbCol = getColumnFromString(options.dbColumn);
+            return this.generateExpression(dbCol, adjustedOp, member.value, options.type, member.isNegated);
         }
     }
 
@@ -123,7 +110,8 @@ export class DrizzleParser {
                 return maybeNegate(eq(column, sqlVal), column, isNegated);
             }
             else {
-                let sqlVal = escapeQuotes(value); //if we search directly in the json column, we must escape "".
+                //if we search directly in the json column, we must escape "". Also remove % for LIKE.
+                let sqlVal = escapeQuotes(value.replaceAll("%","")); 
                 if(operator == ":=") sqlVal = `"${sqlVal}"`; //for exact match, we include the quotes.
                 return maybeNegate(like(column, `%${sqlVal}%`), column, isNegated);
             }
@@ -131,13 +119,14 @@ export class DrizzleParser {
         else if(type == "string") {
             //like is case-insensitive by default.
             if(operator == "=") return maybeNegate(eq(lower(column), lower(value)), column, isNegated);
-            if(operator == ":") return maybeNegate(like(column, `%${value}%`), column, isNegated);
+            if(operator == ":") return maybeNegate(like(column, `%${value.replaceAll("%","")}%`), column, isNegated);
             throw new Error(`Invalid operator (${operator}) for text expression`);
         }
         else {
             const numValue = parseInt(value);
             let expression: SQL|null = 
                 (operator == "=") ? eq(column, numValue) :
+                (operator == "!=") ? ne(column, numValue) :
                 (operator == "<") ? lt(column, numValue) :
                 (operator == ">") ? gt(column, numValue) :
                 (operator == "<=") ? lte(column, numValue) :
@@ -155,26 +144,6 @@ export class DrizzleParser {
         const usage = this.statistics.keywordUsage;
         usage[keyword] = (usage[keyword] ?? 0) + 1;
     }
-}
-
-function getColumnFromString(columnStr: string): Column {
-    const [tableName,columnName] = columnStr.split(".");
-    const table = getTableFromName(tableName);
-
-    if(!table)
-        throw new Error(`Invalid table ${tableName}.`);
-
-    if(!columnName || !Object.hasOwn(table, columnName))
-        throw new Error(`Invalid DB Column "${columnStr}". Expected "table.column".`);
-
-    const column = columnName as keyof typeof table;
-    return table[column] as Column;
-}
-
-function getTableFromName(tableName: string) {
-    if(tableName == "Card") return Card;
-    if(tableName == "Set") return Set;
-    return null;
 }
 
 function getAdjustedOperator(operator: string, type: KeywordType, forceExactMatches=false) {

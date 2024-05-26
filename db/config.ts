@@ -32,6 +32,7 @@ const Card = defineTable({
     abilities: column.json({optional: true}), //【AUTO】 [(1) Put the top card of your deck into your clock] When this card is placed...
     flavor: column.text({optional: true}),
     tags: column.json({optional: true}), //CXCombo/Riki
+    icons: column.json({optional:true}),
     image: column.text() //name of the image file.
   }
 });

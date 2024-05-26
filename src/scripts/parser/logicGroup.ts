@@ -72,12 +72,9 @@ export class LogicGroup<TokenType> {
             }
         }
         else {
-            //remove empty paths on top level.
-            const populatedMembers = this.members.filter((m) => !Array.isArray(m) || m.length > 0);
-
             return {
                 type: "or",
-                members: populatedMembers
+                members: this.members
             }
         };
     }
@@ -94,4 +91,25 @@ export function negateLogicTree<TokenType>(tree: LogicTree<TokenType>, tokenNega
             tokenNegator(member);
         }
     }
+}
+
+/**
+ * Display the tree in a readable format.
+ * @param tree 
+ * @param tokenStringifier 
+ * @returns 
+ */
+export function stringifyLogicTree<TokenType>(
+    tree:LogicTree<TokenType>, tokenStringifier: (token: TokenType)=>string) {
+    let membersAsText = [];
+    for(const member of tree.members) {
+        if(Array.isArray(member)) {
+            membersAsText.push(member.map((m) => tokenStringifier(m)));
+        }
+        else {
+            membersAsText.push(tokenStringifier(member));
+        }
+    }
+
+    return `"${tree.type.toUpperCase()}": {\n${membersAsText.join(",\n")}\n}`;
 }

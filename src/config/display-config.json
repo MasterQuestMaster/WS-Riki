@@ -1,0 +1,25 @@
+{
+    "Image": {
+        "join": [],
+        "select": {
+            "id": "Card.id",
+            "name": "Card.name",
+            "image": "Card.image"
+        }
+    },
+    "List": {
+        "join": ["Set"],
+        "select": {
+            "id": "Card.id",
+            "cardno": "Card.cardno",
+            "name": "Card.name",
+            "type": "Card.type",
+            "color": "Card.color",
+            "rarity": "Card.rarity",
+            "level": "Card.level",
+            "cost": "Card.cost",
+            "image": "Card.image",
+            "setName": "Set.name"
+        }
+    }
+}
