@@ -2,7 +2,7 @@
 import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@components/SearchHeader.astro";
 
-import { db, eq, Set } from 'astro:db';
+import { db, Set } from 'astro:db';
 import { format } from 'date-fns';
 
 const sets = await db.select().from(Set);

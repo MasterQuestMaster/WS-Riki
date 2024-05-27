@@ -4,7 +4,6 @@ import SearchHeader from '@components/SearchHeader.astro';
 import CardImageTile from '@components/CardImageTile.astro';
 
 import { db, eq, Card, Set } from 'astro:db';
-import type{SelectedFields} from 'drizzle-orm/sqlite-core';
 
 import displayConfig from "src/config/display-config.json";
 import { objectMap, objectFilter } from 'src/scripts/utils';
@@ -24,7 +23,7 @@ if(!set) {
 //filter "Set" columns because we already have them.
 const currentDisplayConfig = displayConfig["Image"];
 const filteredColumns = objectFilter(currentDisplayConfig.select, (val) => !val.startsWith("Set"));
-const selectColumns = objectMap(filteredColumns, getColumnFromString) //as any;
+const selectColumns = objectMap<string,any>(filteredColumns, getColumnFromString) //as any;
 
 const cards = await db.select(selectColumns).from(Card).where(eq(Card.setId, set.id));
 

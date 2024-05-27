@@ -6,7 +6,7 @@ export interface Props {
   icon: string;
 }
 
-function getSVG(name: string) {
+async function getSVG(name: string) {
   const filepath = `/src/svg/${name}.svg`;
   const files = import.meta.glob<string>('/src/svg/**/*.svg', {
     as: 'raw',
@@ -16,10 +16,12 @@ function getSVG(name: string) {
     throw new Error(`${filepath} not found`);
   }
 
-  const root = parse(files[filepath]);
+  const file = await files[filepath]();
+  const root = parse(file);
 
   const svg = root.querySelector('svg');
-  const { attributes, innerHTML } = svg;
+  const attributes = svg?.attributes;
+  const innerHTML = svg?.innerHTML;
 
   return {
     attributes,
@@ -28,7 +30,7 @@ function getSVG(name: string) {
 }
 
 const { icon, ...attributes } = Astro.props as Props;
-const { attributes: baseAttributes, innerHTML } = getSVG(icon);
+const { attributes: baseAttributes, innerHTML } = await getSVG(icon);
 
 const svgAttributes = { ...baseAttributes, ...attributes };
 ---
