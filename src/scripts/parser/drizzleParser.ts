@@ -1,6 +1,6 @@
 import { eq, ne, gt, gte, lt, lte, like, and, or, isNull, isNotNull, sql, not} from 'astro:db';
 
-import { Column, type SQL } from 'drizzle-orm';
+import { type Column, type SQL } from 'drizzle-orm';
 
 import type { SearchToken, KeywordType } from "./queryParser";
 import { type LogicTree, negateLogicTree } from "./logicGroup";

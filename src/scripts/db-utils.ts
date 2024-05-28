@@ -1,5 +1,5 @@
 import { Card, Set } from 'astro:db';
-import { Column } from 'drizzle-orm';
+import { type Column } from 'drizzle-orm';
 
 export function getColumnFromString(columnStr: string): Column {
     const [tableName,columnName] = columnStr.split(".");
