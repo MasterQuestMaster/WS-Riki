@@ -29,7 +29,6 @@
     "typescript": "^5.4.5"
   },
   "devDependencies": {
-    "@iconify-json/ic": "^1.1.17",
     "tsx": "^4.10.5"
   }
 }
