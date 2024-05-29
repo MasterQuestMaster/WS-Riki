@@ -1,5 +1,5 @@
 {
-    "Image": {
+    "image": {
         "join": [],
         "select": {
             "id": "Card.id",
@@ -7,7 +7,7 @@
             "image": "Card.image"
         }
     },
-    "List": {
+    "list": {
         "join": ["Set"],
         "select": {
             "id": "Card.id",

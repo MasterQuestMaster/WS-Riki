@@ -2,6 +2,7 @@
 import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@components/SearchHeader.astro";
 import CardImageTile from "@components/CardImageTile.astro";
+import CardDetailRow from "@components/CardDetailRow.astro";
 
 import { db, Card, Set, eq } from 'astro:db';
 import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "src/scripts/parser/queryParser";
@@ -15,6 +16,12 @@ import displayConfig from "src/config/display-config.json";
 
 
 const query = Astro.url.searchParams.get("q");
+
+//Perform a runtime check for the default value, since TS convert is only compile time.
+let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() as keyof typeof displayConfig ?? "";
+if(!Object.hasOwn(displayConfig, displayFormat)) {
+    displayFormat = "image";
+}
 
 //Parse the query into a LogicTree that can be processed further.
 const parser = new QueryParser(parserConfig.keywords as QueryKeywordOptions);
@@ -40,7 +47,7 @@ const drizzleFilterParams =  drizzleParser.parseLogicTree(tree);
 //We can avoid this by specifying all the columns in the Select.
 
 //"any" type is necessary because SelectedFields type is not compatible.
-const currentDisplayConfig = displayConfig["Image"];
+const currentDisplayConfig = displayConfig[displayFormat];
 const selectColumns = objectMap<string,any>(currentDisplayConfig.select, getColumnFromString);
 
 //Always join Set unless we find out it impacts performance.
@@ -69,8 +76,27 @@ if(results.length == 1) {
     <p>{results.length} results found.</p>
     <pre>{ stringifyLogicTree(tree, stringifySearchToken) }</pre>
     <pre>{ dbQuery.toSQL().sql }</pre>
-    <ul>
-        { results.map( (card) => <li><CardImageTile card={card} /></li> ) }
-    </ul>k
+    <!-- TODO: Extract the surrounding markup into own component as well based on format. -->
+    {displayFormat == "image" && 
+        <ul>
+            { results.map( (card) => <li><CardImageTile card={card} /></li> ) }
+        </ul>
+    }
+    {displayFormat == "list" && 
+        <table>
+            <thead>
+                <tr>
+                    <th>Card No.</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Color</th>
+                    <th>LV/C</th>
+                    <th>Rarity</th>
+                    <th>Set</th>
+                </tr>
+            </thead>
+            { results.map( (card) => <CardDetailRow card={card} /> ) }
+        </table>
+    }
     <!-- TODO: Show a default page if no cards were found. -->
 </MainLayout>

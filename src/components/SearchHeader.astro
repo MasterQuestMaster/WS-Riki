@@ -4,32 +4,62 @@ import { Icon } from "astro-icon/components"
 const { searchText } = Astro.props;
 ---
 <header id="search-header">
-    <a title="Back to homepage" href="/" class="header-logo"><span class="vh">Riki</span>Home</a>
-    <form action="/search" accept-charset="UTF-8" method="get" class="header-search">
-        <label for="header-search-field" class="visually-hidden">Search for Weiß Schwarz cards</label> 
-        <input type="text" name="q" id="header-search-field" value={searchText} placeholder="Search for Weiß Schwarz cards…" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" class="header-search-field"> 
-        
-        <!-- Hidden inputs for additional search options -->
-        <input type="hidden" name="unique" id="unique" value="cards" autocomplete="off"> 
-        <input type="hidden" name="as" id="as" value="grid" autocomplete="off"> 
-        <input type="hidden" name="order" id="order" value="name" autocomplete="off"> 
-
-        <button type="submit" class="vh">Find Cards</button>
-    </form>
-
-    <div class="header-links">
-        <div class="header-link-divider"></div> 
-        <a href="/advanced" class="header-link double-pad-left">
-            <Icon name="table" />
-            <span>Advanced</span>
-        </a> 
-        <a href="/docs/syntax" class="header-link">
-            <Icon name="help" />
-            <span>Syntax</span>
-        </a> 
-        <a href="/sets" class="header-link">
-            <Icon name="crown" /> <!-- can use width/height/color freely -->
-            <span>Sets</span>
-        </a>
+    <div class="header-content">
+        <a title="Back to homepage" href="/" class="header-logo"><span class="visually-hidden">Riki</span>Home</a>
+        <form action="/search" accept-charset="UTF-8" method="get" class="header-search">
+            <label for="header-search-field" class="visually-hidden">Search for Weiß Schwarz cards</label> 
+            <input type="text" name="q" id="header-search-field" value={searchText} placeholder="Search for Weiß Schwarz cards…" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" class="header-search-field"> 
+            
+            <!-- Hidden inputs for additional search options -->
+            <input type="hidden" name="unique" id="unique" value="cards" autocomplete="off"> 
+            <input type="hidden" name="as" id="as" value="grid" autocomplete="off"> 
+            <input type="hidden" name="order" id="order" value="name" autocomplete="off"> 
+    
+            <button type="submit" class="visually-hidden">Find Cards</button>
+        </form>
+    
+        <div class="header-links">
+            <div class="header-link-divider"></div> 
+            <a href="/advanced" class="header-link double-pad-left">
+                <Icon name="table" />
+                <span>Advanced</span>
+            </a> 
+            <a href="/docs/syntax" class="header-link">
+                <Icon name="help" />
+                <span>Syntax</span>
+            </a> 
+            <a href="/sets" class="header-link">
+                <Icon name="crown" /> <!-- can use width/height/color freely -->
+                <span>Sets</span>
+            </a>
+        </div>
     </div>
 </header>
+
+<style>
+    /*TODO: define a color scheme and use variables for it. */
+
+    #search-header {
+        width: 100%;
+        padding: 0 2.5%;
+        background-color: aliceblue;
+    }
+
+    .header-content {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+        max-width: 1000px;
+        margin: auto;
+
+        & > * {
+            flex-grow: 1;
+        }
+    }
+
+    #header-search-field {
+        width: 100%;
+    }
+</style>
