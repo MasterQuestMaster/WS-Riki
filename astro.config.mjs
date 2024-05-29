@@ -11,7 +11,7 @@ export default defineConfig({
   output: "server",
   site: "https://wsriki.com",
   integrations: [icon(), robotsTxt(), db()],
-  adapter: node({
+  adapter: cloudflare() /* node({
     mode: "standalone"
-  })
+  })*/
 });
