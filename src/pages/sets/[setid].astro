@@ -9,6 +9,12 @@ import displayConfig from "src/config/display-config.json";
 import { objectMap, objectFilter } from 'src/scripts/utils';
 import { getColumnFromString } from 'src/scripts/db-utils';
 
+//Display Format: Perform a runtime check for the default value, since TS convert is only compile time.
+let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() as keyof typeof displayConfig ?? "";
+if(!Object.hasOwn(displayConfig, displayFormat)) {
+    displayFormat = "image";
+}
+
 //We don't join cards here so that we can show empty sets.
 const { setid = "" } = Astro.params;
 const set = await db.select().from(Set).where(eq(Set.id, setid)).get();
@@ -21,7 +27,7 @@ if(!set) {
 }
 
 //filter "Set" columns because we already have them.
-const currentDisplayConfig = displayConfig["Image"];
+const currentDisplayConfig = displayConfig[displayFormat];
 const filteredColumns = objectFilter(currentDisplayConfig.select, (val) => !val.startsWith("Set"));
 const selectColumns = objectMap<string,any>(filteredColumns, getColumnFromString) //as any;
 
