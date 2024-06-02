@@ -1,11 +1,15 @@
 ---
 import { Icon } from "astro-icon/components"
 
+
 const { searchText } = Astro.props;
 ---
 <header id="search-header">
     <div class="header-content">
-        <a title="Back to homepage" href="/" class="header-logo"><span class="visually-hidden">Riki</span>Home</a>
+        <a title="Back to homepage" href="/" class="header-logo">
+            <span class="visually-hidden">Riki</span>
+            <Icon name="riki_icon" />
+        </a>
         <form action="/search" accept-charset="UTF-8" method="get" class="header-search">
             <label for="header-search-field" class="visually-hidden">Search for Weiß Schwarz cards</label> 
             <input type="text" name="q" id="header-search-field" value={searchText} placeholder="Search for Weiß Schwarz cards…" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" class="header-search-field"> 
@@ -61,5 +65,24 @@ const { searchText } = Astro.props;
 
     #header-search-field {
         width: 100%;
+    }
+
+    .header-logo {
+        flex: 0 0 28px;
+        height: 52px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+
+        & svg {
+            height: 34px;
+            width: 34px;
+        }
+    }
+
+    @media screen and (min-width: 420px) {
+        .header-logo {
+            flex: 0 0 34px;
+        }
     }
 </style>

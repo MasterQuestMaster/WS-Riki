@@ -1,4 +1,4 @@
-import { Card, Set } from 'astro:db';
+import { db, sql, Card, Set } from 'astro:db';
 import { type Column } from 'drizzle-orm';
 
 export function getColumnFromString(columnStr: string): Column {
@@ -26,3 +26,7 @@ export function getTableFromName(tableName: string) {
 export function dbarray(value: any):string[] {
     return value as string[] ?? [];
 } 
+
+export async function getDistinctArrayColValues(column: Column) {
+    return db.selectDistinct({value: sql`json_each.value`}).from(sql`${column.table},json_each(${column})`); // as Promise<{value:string}[]>;
+}

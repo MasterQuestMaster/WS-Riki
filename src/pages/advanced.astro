@@ -1,9 +1,14 @@
 ---
 import MainLayout from "@layouts/MainLayout.astro";
-import SearchHeader from "@components/SearchHeader.astro";
-import NumberOperator from "@components/NumberOperator.astro";
+import SearchHeader from "@layouts/SearchHeader.astro";
+import FormRow from "@layouts/FormRow.astro";
 
-import { db, Card, Set, sql } from "astro:db";
+import NumberOperator from "@components/controls/NumberOperator.astro";
+import ToggleSwitch from "@components/controls/ToggleSwitch.astro";
+
+import { db, Card, Set } from "astro:db";
+
+import { getDistinctArrayColValues } from "src/scripts/db-utils";
 
 //If any post data exists, we convert the post data to a query string. Then we redirect to /search with that string.
 
@@ -59,143 +64,282 @@ if(Astro.request.method === "POST") {
     //     console.log(key, value);
     // });
 
-    //console.log(data.getAll("icon[]"));
+    //console.log(data.getAll("icon"));
 }
 
 //Load expansions
 const sets = await db.select().from(Set);
 
-const traits = await db.selectDistinct({trait: sql`json_each.value`}).from(sql`${Card},json_each(${Card.traits})`)
+const traits = await getDistinctArrayColValues(Card.traits);
 console.log(traits);
+
+const tags = await getDistinctArrayColValues(Card.tags);
+console.log(tags);
+
 ---
 
 <MainLayout title="Advanced Search">
     <SearchHeader />
     <main>
-        <form method="post">
-            <label for="search-name">Name:</label>
-            <input name="name" id="search-name" type="text" 
-                placeholder='Any words in the name, e.g. "Akane"' />
+        <h1 class="visually-hidden">Advanced Search</h1>
 
-            <label for="search-ability">Ability:</label>
-            <input name="ability" id="search-ability" type="text" 
-                placeholder='Any card text, e.g. "When this card attacks"' />
-
-            <label for="search-cardno">Card No.</label>
-            <input name="cardno" id="search-cardno" type="text"
-                placeholder='Card number, e.g. "SPY/S106-E001"' />
-
-            <label for="search-type">Type:</label>
-            <select name="type" id="search-type">
-                <option value="" class="default-option">Any</option>
-                <option value="Character">Character</option>
-                <option value="Event">Event</option>
-                <option value="Climax">Climax</option>
-            </select>
-
-            <label for="search-color">Color:</label>
-            <select name="color" id="search-color">
-                <option value="" class="default-option">Any</option>
-                <option value="RED">Red</option>
-                <option value="GREEN">Green</option>
-                <option value="BLUE">Blue</option>
-                <option value="YELLOW">Yellow</option>
-                <!-- <option>Purple</option> -->
-            </select>
-
-            <label for="search-rarity">Rarity:</label>
-            <input name="rarity" id="search-rarity" type="text" list="raritylist" />
-            <datalist id="raritylist">
-                <option value="C">Common</option>
-                <option value="U">Uncommon</option>
-                <option value="R">Rare</option>
-                <option value="RR">Double Rare</option>
-                <option value="RR+">Double Rare+ </option>
-                <option value="SR">Super Rare</option>
-                <option value="RRR">Triple Rare</option>
-                <option value="OFR">Overframe Rare</option>
-                <option value="SP">Special</option>
-                <option value="SSP">Super Special Rare</option>
-                <option value="SEC">Secret Rare</option>
-                <option value="TD">Trial Deck</option>
-                <option value="PR">Promo Rare</option>
-                <option value="CC">Climax Common</option>
-                <option value="CR">Climax Rare</option>
-            </datalist>
-
-            <label for="search-set">Set</label>
-            <select name="set" id="search-set">
-                <option value="" class="default-option">Any</option>
-                {sets.map((set) => 
-                    <option value={set.id}>{set.name}</option>
-                )}
-            </select>
-
-            <label for="search-power">Power</label>
-            <NumberOperator id="search-power-op" name="power-op" label="Power Operator" />
-            <input name="power" id="search-power" type="number" min="0" max="20000" step="500"/>
-
-            <label for="search-level">Level</label>
-            <NumberOperator id="search-level-op" name="level-op" label="Level Operator" />
-            <input name="power" id="search-power" type="number" min="0" max="3" placeholder="Level (0-3)" />
-
-            <label for="search-cost">Cost</label>
-            <NumberOperator id="search-cost-op" name="cost-op" label="Cost Operator" />
-            <input name="cost" id="search-cost" type="number" min="0" max="9" />
-
-            <label for="search-soul">Soul</label>
-            <NumberOperator id="search-soul-op" name="soul-op" label="Soul Operator" />
-            <input name="soul" id="search-soul" type="number" min="0" max="3" />
-
-            <label for="search-trigger">Trigger</label>
-            <!-- 
-                TODO: Think about how to do trigger. Use pictures with checkboxes maybe.
-                This should probably be "OR", and should have the trigger combinations like
-                SOUL STANDBY, or SOUL SOUL.
-            -->
-            <input name="trigger" id="search-trigger" type="text" placeholder="A trigger like GATE." />
-
-            <label for="search-trait">Trait</label>
-            <select name="traits" id="search-trait">
-                <option value="" class="default-option">Any</option>
-                {traits.map((tr) => 
-                    <option>{tr.trait}</option>
-                )}
-
-                <label>
-                    Any
-                    <input name="traits-op" type="checkbox" value="all" />
-                    All
-                </label>
-            </select>
-
-            <label for="search-tag">Tag</label>
-            <input name="tag" id="search-tag" type="text" placeholder='A tag like "Runner"' />
-
-            <label>Icon</label>
-            <fieldset>
-                <legend class="visually-hidden">Icons</legend>
-                <div>
-                    <label>
-                        <input name="icon" value="counter" type="checkbox" />
-                        Counter
-                    </label>
-                    
-                    <label>
-                        <input name="icon" value="clock" type="checkbox" />
-                        Clock
-                    </label>
+        <form id="advanced-search-form" method="post">
+            <div class="inner-flex">
+                <FormRow label="Name" _for="search-name">
+                    <input name="name" id="search-name" type="text"
+                        placeholder='Any words in the name, e.g. "Akane"' />
+                </FormRow>
+                <FormRow label="Ability" _for="search-ability">
+                    <input name="ability" id="search-ability" type="text"
+                        placeholder='Any card text, e.g. "When this card attacks"' />
+                </FormRow>
+                
+                <FormRow label="Card No." _for="search-cardno">
+                    <input name="cardno" id="search-cardno" type="text"
+                        placeholder='Card number, e.g. "SPY/S106-E001"' />
+                </FormRow>
+                <FormRow label="Type" _for="search-type">
+                    <select name="type" id="search-type" multiple>
+                        <option value="">Choose a type...</option>
+                        <option value="Character">Character</option>
+                        <option value="Event">Event</option>
+                        <option value="Climax">Climax</option>
+                    </select>
+                </FormRow>
+                <FormRow label="Color" _for="search-color">
+                    <select name="color" id="search-color" multiple>
+                        <option value="">Choose a color...</option>
+                        <option value="RED">Red</option>
+                        <option value="GREEN">Green</option>
+                        <option value="BLUE">Blue</option>
+                        <option value="YELLOW">Yellow</option>
+                        <!-- <option>Purple</option> -->
+                    </select>
+                </FormRow>
+                <FormRow label="Rarity" _for="search-rarity">
+                    <select name="rarity" id="search-rarity" multiple>
+                        <option value="">Choose a rarity...</option>
+                        <option value="C">Common</option>
+                        <option value="U">Uncommon</option>
+                        <option value="R">Rare</option>
+                        <option value="RR">Double Rare</option>
+                        <option value="RR+">Double Rare+ </option>
+                        <option value="SR">Super Rare</option>
+                        <option value="RRR">Triple Rare</option>
+                        <option value="OFR">Overframe Rare</option>
+                        <option value="SP">Special</option>
+                        <option value="SSP">Super Special Rare</option>
+                        <option value="SEC">Secret Rare</option>
+                        <option value="TD">Trial Deck</option>
+                        <option value="PR">Promo Rare</option>
+                        <option value="CC">Climax Common</option>
+                        <option value="CR">Climax Rare</option>
+                    </select>
+                </FormRow>
+                <FormRow label="Expansion" _for="search-set">
+                    <select name="set" id="search-set" multiple>
+                        <option value="">Choose an expansion...</option>
+                        {sets.map((set) =>
+                            <option value={set.id}>{set.name} ({set.id})</option>
+                        )}
+                    </select>
+                </FormRow>
+                <FormRow label="Level" _for="search-level">
+                    <NumberOperator name="level-op" id="search-level-op" label="Level Operator" />
+                    <input name="level" id="search-power" type="number" min="0" max="3" placeholder="(0-3)" />
+                </FormRow>
+                <FormRow label="Cost" _for="search-cost">
+                    <NumberOperator name="cost-op" id="search-cost-op" label="Cost Operator" />
+                    <input name="cost" id="search-cost" type="number" min="0" max="9" placeholder="(0-9)" />
+                </FormRow>
+                <FormRow label="Power" _for="search-power">
+                    <NumberOperator name="power-op" id="search-power-op" label="Power Operator" />
+                    <input name="power" id="search-power" type="number" min="0" max="20000" step="500" />
+                </FormRow>
+                <FormRow label="Soul" _for="search-soul">
+                    <NumberOperator name="soul-op" id="search-soul-op" label="Soul Operator" />
+                    <input name="soul" id="search-soul" type="number" min="0" max="3" placeholder="(0-3)" />
+                </FormRow>
+                <FormRow label="Trigger" _for="search-trigger">
+                    <select name="trigger" id="search-trigger" multiple></select>
+                </FormRow>
+                <FormRow label="Trait" _for="search-trait">
+                    <select name="traits" id="search-trait" multiple>
+                        <option value="">Choose a trait...</option>
+                        {traits.map((tr) =>
+                            <option>{tr.value}</option>
+                        )}
+                    </select>
+                    <div class="toggle-switch">
+                        <ToggleSwitch id="trait-toggle" name="traits-op" labelLeft="Any" labelRight="All" color="#a00" value="all"  />
+                    </div>
+                </FormRow>
+                <FormRow label="Tag" _for="search-tag">
+                    <select name="tag" id="search-tag" multiple>
+                        <option value="">Choose a tag...</option>
+                        {tags.map((tg) =>
+                            <option>{tg.value}</option>
+                        )}
+                    </select>
+                </FormRow>
+                <FormRow label="Icon">
+                    <fieldset>
+                        <legend class="visually-hidden">Icons</legend>
+                        <div>
+                            <label>
+                                <input name="icon" value="counter" type="checkbox" />
+                                <img class="game-icon" src="images/backup.webp" alt="Counter Symbol" />
+                                Counter
+                            </label>
+                
+                            <label>
+                                <input name="icon" value="clock" type="checkbox" />
+                                <img class="game-icon" src="images/clock.webp" alt="Clock Symbol" />
+                                Clock
+                            </label>
+                        </div>
+                    </fieldset>
+                </FormRow>
+                <FormRow label="Preferences">
+                    <label class="visually-hidden">Display</label>
+                    <select name="as" id="display-as">
+                        <option value="image">Display as images</option>
+                        <option value="list">Display as list</option>
+                    </select>
+                    <select name="order" id="display-order">
+                        <option value="name">Sort by Name</option>
+                        <option value="date">Sort by Release Date</option> <!-- release date of set -->
+                        <option value="set">Sort by Set/Number</option> <!-- this requires adding the set-nr and the card-nr as separate columns --> 
+                        <option value="rarity">Sort by Rarity</option> <!-- this requires defining what the order is -->
+                        <option value="color">Sort by Color</option> <!-- color order like official sets -->
+                        <option value="level">Sort by Level</option>
+                        <option value="cost">Sort by Cost</option>
+                        <option value="power">Sort by Power</option>
+                    </select>
+                </FormRow>
+                <FormRow label="" sticky>
+                    <input class="search-btn" type="submit" value="Search with these options" />
+                </FormRow>
                 </div>
-            </fieldset>
-
-
-            <input type="submit" value="Search with these options" />
+            </div>
         </form>
     </main>
 </MainLayout>
 
+<script>
+    //You can import both the npm library and its css on the client like this:
+    import TomSelect from "tom-select";
+    import "tom-select/dist/css/tom-select.default.css";
+    import scope from "astro:scope";
+
+    interface TriggerData {
+        id: string, name: string, image: string
+    };
+
+    console.log(scope);
+
+    new TomSelect("#search-type", {});
+    new TomSelect("#search-color", {});
+    new TomSelect("#search-rarity", {});
+    new TomSelect("#search-set", {});
+    new TomSelect("#search-trait", {});
+    new TomSelect("#search-tag", {});
+
+    new TomSelect("#search-trigger", {
+        valueField: "id",
+        searchField: ["name"],
+        options: [
+            {id:"none", name:"No Trigger", image:"images/triggers/no_trigger.webp"},
+            {id:"soul", name:"Soul", image:"images/triggers/soul.webp"},
+            {id:"2soul", name:"2 Soul", image:"images/triggers/2soul.webp"},
+            {id:"bar", name:"Treasure (Bar)", image:"images/triggers/bar.webp"},
+            {id:"bag", name:"Pool (Bag)", image:"images/triggers/bag.webp"},
+            {id:"book", name:"Draw (Book)", image:"images/triggers/book.webp"},
+            {id:"gate", name:"Gate (Pants)", image:"images/triggers/gate.webp"},
+            {id:"wind", name:"Return (Wind)", image:"images/triggers/wind.webp"},
+            {id:"shot", name: "Shot (Burn)", image:"images/triggers/shot.webp"},
+            {id:"choice", name:"Choice", image:"images/triggers/choice.webp"},
+            {id:"door", name:"Comeback (Door)", image:"images/triggers/door.webp"},
+            {id:"standby", name:"Standby", image:"images/triggers/standby.webp"}
+        ],
+        placeholder: "Choose a trigger...",
+        //items: [""],
+        render: {
+            option: renderTriggerOption,
+            item: renderTriggerOption
+        }
+    });
+
+    function renderTriggerOption(data:TriggerData, escape: (txt:string)=>string) {
+        return `<div>
+                    <img class="trigger-image" data-astro-cid-${scope} src="${escape(data.image)}" alt="${escape(data.id ?? "any")}" />
+                    <span class="trigger-name" data-astro-cid-${scope}>${escape(data.name)}</span>
+                </div>`;
+    }
+
+</script>
+
+<style is:global>
+    /* TOM Select (global cause they don't have the scope) */
+    #advanced-search-form {
+        & .ts-dropdown, .ts-control, .ts-control input {
+            font-size: 16px;
+        }
+    }
+</style>
+
 <style>
-    .default-option {
-        color: gray;
+    .inner-flex {
+        margin: 0 auto;
+        max-width: 1000px;
+        display: flex;
+        flex-flow: column nowrap;
+    }
+
+    /* form inputs */
+    input[type="text"], input[type="number"], select {
+        background-color: #FEFEFE;
+        border-radius: 2px;
+        border: 1px solid #AEAEAE;
+        color: #343242;
+        font-size: 16px;
+        line-height: 20px;
+        padding: 8px 10px;
+    }
+
+    .content {
+        & input[type="text"], input[type="number"], select {
+            flex-grow: 1;
+            margin: 0 5px 0 0;
+            max-width: 100%;
+        }
+    }
+
+    @media screen and (min-width: 740px) {
+        .content {
+            & input[type="text"], input[type="number"], select {
+            max-width: 420px;
+        } 
+    }
+
+    .toggle-switch {
+        margin: 5px 0 5px 0;
+    }
+
+    .search-btn {
+        font-size: 15px;
+        padding: 0 12px;
+        height: 36px;
+        margin: 18px 0 0 0 ;
+    }
+
+    /* icons */
+
+    .trigger-image {
+        height: 2em;
+    }
+
+    .game-icon {
+        height: 2em;
     }
 </style>

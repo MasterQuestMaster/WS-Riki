@@ -1,1 +1,5 @@
 /* global styles for the application */
+
+a {
+    text-decoration: none;
+}

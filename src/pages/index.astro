@@ -1,5 +1,6 @@
 ---
 import MainLayout from "@layouts/MainLayout.astro";
+import { Icon } from "astro-icon/components";
 ---
 
 <MainLayout>
@@ -7,11 +8,61 @@ import MainLayout from "@layouts/MainLayout.astro";
 	<form class="homepage-form" action="/search" accept-charset="UTF-8" method="get">
 
 		<a class="homepage-logo" rel="nofollow" title="Back to homepage" href="/">
+			<span class="visually-hidden">Riki</span>
 			<!-- Show page icon as homepage link -->
-			<img src="/favicon.svg" width="30" />
+			<Icon name="riki_icon" />
 		</a>
 
 		<input type="text" name="q" id="q" data-component="homepage-search" class="homepage-form-field" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" tabindex="1">
 		<button type="submit" class="visuallyhidden"><span class="vh">Find cards</span></button>
 	</form>
 </MainLayout>
+
+<style>
+	.homepage-title {
+		margin: 20% auto 0 auto;
+		font-size: 24px;
+		font-weight: 200;
+		color: black;
+	}
+
+	/* @media screen and (min-width: 410px) {
+		.homepage-title {
+			margin-top: 25%;
+		}
+	} */
+
+	/* @media screen and (min-width: 765px) {
+		.homepage-title {
+			font-size: 32px;
+			margin: -8% auto 0 auto;
+		}
+	} */
+
+	.homepage-form {
+		margin: 30px auto 0;
+		max-width: 524px;
+		position: relative;
+		width: 100%;
+	}
+
+	.homepage-logo {
+		display: block;
+		position: absolute;
+		z-index: 500;
+		width: 42px;
+		height: 42px;
+		padding: 2px;
+		left: 8px;
+		top: 50%;
+		margin-top: -21px;
+	}
+
+	@media screen and (min-width: 765px) {
+		.homepage-logo {
+			width: 48px;
+			height: 48px;
+			margin-top: -24px;
+		}
+	}
+</style>

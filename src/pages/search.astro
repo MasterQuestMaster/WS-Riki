@@ -1,15 +1,15 @@
 ---
 import MainLayout from "@layouts/MainLayout.astro";
-import SearchHeader from "@components/SearchHeader.astro";
+import SearchHeader from "@layouts/SearchHeader.astro";
 import CardImageTile from "@components/CardImageTile.astro";
 import CardDetailRow from "@components/CardDetailRow.astro";
 
 import { db, Card, Set, eq } from 'astro:db';
-import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "src/scripts/parser/queryParser";
-import { DrizzleParser, type IKeywordOptions as DrizzleKeywordOptions } from "src/scripts/parser/drizzleParser";
-import { stringifyLogicTree } from "src/scripts/parser/logicGroup";
-import { stringifySearchToken, objectMap } from "src/scripts/utils";
-import { getColumnFromString } from "src/scripts/db-utils";
+import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "@scripts/parser/queryParser";
+import { DrizzleParser, type IKeywordOptions as DrizzleKeywordOptions } from "@scripts/parser/drizzleParser";
+import { stringifyLogicTree } from "@scripts/parser/logicGroup";
+import { stringifySearchToken, objectMap } from "@scripts/utils";
+import { getColumnFromString } from "@scripts/db-utils";
 
 import parserConfig from "src/config/parser-config.json";
 import displayConfig from "src/config/display-config.json";

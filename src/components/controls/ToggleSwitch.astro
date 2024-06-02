@@ -1,0 +1,105 @@
+---
+// https://stackoverflow.com/questions/63410507/how-to-connect-two-options-and-toggle-switch-buttons
+interface Props {
+    id: string,
+    name: string,
+    value?: string,
+    color?: string,
+    labelLeft?:string,
+    labelRight?:string
+}
+
+const { 
+    id, 
+    name, 
+    value="on", 
+    color="#2196F3",
+    labelLeft="",
+    labelRight="" 
+} = Astro.props;
+
+---
+<input type="checkbox" {id} {name} {value}>
+
+<label for={id}>
+    <div class="left">{labelLeft}</div>
+
+    <div class="switch">
+        <span class="slider round"></span>
+    </div>
+
+    <div class="right">{labelRight}</div>
+</label>
+
+<style define:vars={{color}}>
+    label {
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+    }
+
+    .switch,
+    input:checked + label .left,
+    input:not(:checked) + label .right {
+        pointer-events: all;
+        cursor: pointer;
+    }
+
+    input {
+        display: none;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+
+        &:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+        }
+    }
+
+    input:checked + label .slider {
+        background-color: var(--color);
+
+        &:before {
+            transform: translateX(26px);
+        }
+    }
+
+    input:focus + label .slider {
+        box-shadow: 0 0 1px var(--color);
+    }
+
+    .slider.round {
+        border-radius: 34px;
+
+        &:before {
+            border-radius: 50%;
+        }
+    }
+
+    .left, .right {
+        margin: 0 .5em;
+    }
+
+</style>

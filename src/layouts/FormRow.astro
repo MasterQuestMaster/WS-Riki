@@ -1,0 +1,74 @@
+---
+interface Props {
+  label: string;
+  _for?: string;
+  sticky?: boolean;
+}
+
+const { label, _for = "", sticky=false } = Astro.props;
+const formattedLabel = label ? label + ":" : ""; //Append ":" if not empty.
+---
+<div class:list={["form-row", {sticky: sticky}]}>
+    <label for={_for}>{formattedLabel}</label>
+    <div class="content">
+        <slot />
+    </div>
+</div>
+
+<style>
+    /* form row */
+    .form-row {
+        padding: 12px 0 14px 0;
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: flex-start;
+        max-width: 100%;
+    }
+
+    .form-row+.form-row {        
+        border-top: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .form-row > label {
+        width: 18%;
+        min-width: 180px;
+        font-size: 16px;
+        font-weight: 300;
+        line-height: 20px;
+        padding: 0 8px 0 0;
+        border: 1px solid transparent;
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        margin-bottom: 5px;
+
+        & svg {
+            width: 18px;
+            height: 18px;
+            margin: 0 7px 0 0;
+        }
+    }
+    
+    .content {
+        width: 100%;
+        max-width: 100%;
+        padding: 5px 0 5px 0;
+    }
+    
+    /* content */
+    @media screen and (min-width: 740px) {
+        .content {
+            width: 80%;
+        }
+    }
+
+    .sticky {
+        position: sticky;
+        bottom: 0;
+        width: 100%;
+        background: #FDFDFD;
+        padding-top: 0px;
+        z-index: 2;
+    }
+</style>
