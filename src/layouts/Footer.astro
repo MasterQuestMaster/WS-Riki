@@ -2,13 +2,20 @@
 
 ---
 <footer>
-    <nav aria-label="site-links">
+    <nav class="inner-flex" aria-label="site-links">
         <div class="footer-column">
             <h6>Cards</h6>
             <ul>
                 <li><a href="/advanced">Advanced Search</a></li>
                 <li><a href="/docs/syntax">Syntax Guide</a></li>
                 <li><a href="/sets">All Sets</a></li>
+            </ul>
+        </div>
+        <div class="footer-column">
+            <h6>Riki</h6>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/">Some other function</a></li>
             </ul>
         </div>
         <div class="footer-column">
@@ -19,18 +26,88 @@
             </ul>
         </div>
     </nav>
-    <section class="disclaimer-text">
-        <p>Riki is not produced by or endorsed by Bushiroad.</p>
-        <p>The card images used on this site have been obtained and re-posted from Bushiroad websites in accordance to the guidelines stated there. 
-            Re-use of these images (re-post, distribution) is strictly prohibited.<br/>
-            ©bushiroad All Rights Reserved.</p>
-        <p>Card text is provided by translators and other community members, and not vetted by Riki.</p>
-        <p>All other content ©<span id="copyright-year">2024</span> 
-            <a href="https://github.com/MasterQuestMaster">MasterQuestMaster</a>.</p>
-    </section>
+    <div class="inner-flex">
+        <section class="disclaimer-text">
+            <p>Riki is not produced by or endorsed by Bushiroad.</p>
+            <p>The card images used on this site have been obtained and re-posted from Bushiroad websites in accordance to the guidelines stated there. 
+                Re-use of these images (re-post, distribution) is strictly prohibited.<br/>
+                ©bushiroad All Rights Reserved.</p>
+            <p>Card text is provided by translators and other community members, and not vetted by Riki.</p>
+            <p>All other content ©<span id="copyright-year">2024</span> 
+                <a href="https://github.com/MasterQuestMaster">MasterQuestMaster</a>.</p>
+        </section>
+    </div>
 </footer>
 
 <script>
     const yearInput = document.getElementById("copyright-year");
     if(yearInput) yearInput.textContent = new Date().getFullYear().toString();
 </script>
+
+<style>
+    footer {
+        display: block;
+        padding: 30px 2.5% 68px 2.5%;
+        background-color: #19181f;
+        text-align: center;
+    }
+
+    footer .inner-flex {
+        flex-flow: row wrap;
+        justify-content: flex-start;
+    }
+
+    .footer-column {
+        max-width: 280px;
+        margin: 0 auto;
+
+        & h6 {
+            color: #999;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px solid #999;
+            max-width: 360px;
+            margin: 0 auto 6px auto;
+            padding: 0 0 6px 0;
+        }
+
+        a {
+            display: block;
+            color: #CCC;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+    }
+
+    .disclaimer-text {
+        font-size: 12px;
+        color: #444;
+        margin: 20px 0 0 0;
+        line-height: 1.33;
+
+        a {
+            color: #CCC;
+        }
+    }
+
+    @media screen and (min-width: 600px) {
+        footer {
+            text-align: left;
+        }
+
+        .footer-column {
+            width: 30%;
+            margin: 0 3% 0 0;
+        }
+
+        h6 {
+            max-width: none;
+        }
+
+        .disclaimer-text {
+            text-align: left;
+            max-width: 700px;
+        }
+    }
+</style>

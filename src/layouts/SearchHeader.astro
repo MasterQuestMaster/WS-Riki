@@ -15,9 +15,8 @@ const { searchText } = Astro.props;
             <input type="text" name="q" id="header-search-field" value={searchText} placeholder="Search for Weiß Schwarz cards…" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" class="header-search-field"> 
             
             <!-- Hidden inputs for additional search options -->
-            <input type="hidden" name="unique" id="unique" value="cards" autocomplete="off"> 
             <input type="hidden" name="as" id="as" value="grid" autocomplete="off"> 
-            <input type="hidden" name="order" id="order" value="name" autocomplete="off"> 
+            <input type="hidden" name="order" id="order" value="name" autocomplete="off">
     
             <button type="submit" class="visually-hidden">Find Cards</button>
         </form>
@@ -46,25 +45,41 @@ const { searchText } = Astro.props;
     #search-header {
         width: 100%;
         padding: 0 2.5%;
-        background-color: aliceblue;
+        background-color: burlywood;
     }
 
-    .header-content {
+    .header-content  {
+        margin: 0 auto;
+        width: 100%;
+        overflow: hidden;
+        max-width: 1000px;
+        position: relative;
         display: flex;
         flex-flow: row nowrap;
         align-items: center;
         justify-content: flex-start;
-        width: 100%;
-        max-width: 1000px;
-        margin: auto;
+        height: 52px;
+    }
 
-        & > * {
-            flex-grow: 1;
-        }
+    .header-search {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        position: relative;
+        flex: 1 1;
+        margin: 0 0 0 4px;
     }
 
     #header-search-field {
-        width: 100%;
+        height: 52px;
+        line-height: 22px;
+        padding: 15px 3px 15px 3px;
+        font-family: "Lato", "Helvetica Neue", Arial, Helvetica, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        color: black;
+        background-color: beige;
+        font-size: 16px;
+        flex: 1 1;
     }
 
     .header-logo {

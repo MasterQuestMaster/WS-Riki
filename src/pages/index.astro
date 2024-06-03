@@ -4,40 +4,46 @@ import { Icon } from "astro-icon/components";
 ---
 
 <MainLayout>
-	<h1 class="homepage-title"><strong>Riki</strong> helps you search <strong>Weiß Schwarz</strong> cards</h1>
-	<form class="homepage-form" action="/search" accept-charset="UTF-8" method="get">
-
-		<a class="homepage-logo" rel="nofollow" title="Back to homepage" href="/">
-			<span class="visually-hidden">Riki</span>
-			<!-- Show page icon as homepage link -->
-			<Icon name="riki_icon" />
-		</a>
-
-		<input type="text" name="q" id="q" data-component="homepage-search" class="homepage-form-field" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" tabindex="1">
-		<button type="submit" class="visuallyhidden"><span class="vh">Find cards</span></button>
-	</form>
+	<main>
+		<div class="inner-flex">
+			<h1 class="homepage-title"><strong>Riki</strong> helps you search <strong>Weiß Schwarz</strong> cards</h1>
+			<form class="homepage-form" action="/search" accept-charset="UTF-8" method="get">
+				<a class="homepage-logo" rel="nofollow" title="Back to homepage" href="/">
+					<span class="visually-hidden">Riki</span>
+					<!-- Show page icon as homepage link -->
+					<Icon name="riki_icon" />
+				</a>
+				<input type="text" class="homepage-search-input" name="q" id="q" data-component="homepage-search" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" tabindex="1">
+				<button type="submit" class="visually-hidden">Find cards</button>
+			</form>
+			<p class="homepage-links">
+				<a class="button inverted" href="/advanced">Advanced Search</a>
+				<a class="button inverted" href="/docs/syntax">Syntax Guide</a>
+				<a class="button inverted" href="/sets">All Sets</a>
+			</p>
+		</div>
+	</main>
 </MainLayout>
 
 <style>
+	main {
+		background-color: beige;
+		position: relative;
+		text-align: center;
+	}
+
+	main > .inner-flex {
+		padding: 0 5%;
+		height: 90vh;
+		min-height: 600px;
+	}
+
 	.homepage-title {
 		margin: 20% auto 0 auto;
 		font-size: 24px;
 		font-weight: 200;
 		color: black;
 	}
-
-	/* @media screen and (min-width: 410px) {
-		.homepage-title {
-			margin-top: 25%;
-		}
-	} */
-
-	/* @media screen and (min-width: 765px) {
-		.homepage-title {
-			font-size: 32px;
-			margin: -8% auto 0 auto;
-		}
-	} */
 
 	.homepage-form {
 		margin: 30px auto 0;
@@ -56,13 +62,65 @@ import { Icon } from "astro-icon/components";
 		left: 8px;
 		top: 50%;
 		margin-top: -21px;
+
+		& svg {
+			width: 100%;
+			height: 100%;
+		}
+	}
+
+	.homepage-search-input {
+    	border: 1px solid rgba(255,255,255,0.25);
+		background-color: white;
+		color: black;
+		padding: 12px 14px 12px 54px;
+		font-size: 24px;
+		border-radius: 2px;
+		box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+		line-height: 1.25;
+		margin: 0;
+		width: 100%;
+	}
+
+	.homepage-links {
+		margin: 10px auto 0 auto;
+		display: flex;
+		flex-flow: row wrap;
+		justify-content: center;
+		align-items: center;
+		opacity: 0.75;
+
+		& a {
+			margin-top: 6px !important;
+		}
+	}
+
+	@media screen and (min-width: 410px) {
+		.homepage-title {
+			margin-top: 25%;
+		}
 	}
 
 	@media screen and (min-width: 765px) {
+		main > .inner-flex {
+			height: 100vh;
+			justify-content: center;
+		}
+
+		.homepage-title {
+			font-size: 32px;
+			margin: -8% auto 0 auto;
+		}
+
 		.homepage-logo {
 			width: 48px;
 			height: 48px;
 			margin-top: -24px;
+		}
+
+		.homepage-search-input {
+			padding: 12px 14px 12px 62px;
+			font-size: 30px;
 		}
 	}
 </style>

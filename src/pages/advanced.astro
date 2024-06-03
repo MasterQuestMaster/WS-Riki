@@ -154,7 +154,7 @@ console.log(tags);
                 </FormRow>
                 <FormRow label="Power" _for="search-power">
                     <NumberOperator name="power-op" id="search-power-op" label="Power Operator" />
-                    <input name="power" id="search-power" type="number" min="0" max="20000" step="500" />
+                    <input name="power" id="search-power" type="number" min="0" max="20000" step="500" placeholder="500"/>
                 </FormRow>
                 <FormRow label="Soul" _for="search-soul">
                     <NumberOperator name="soul-op" id="search-soul-op" label="Soul Operator" />
@@ -289,13 +289,6 @@ console.log(tags);
 </style>
 
 <style>
-    .inner-flex {
-        margin: 0 auto;
-        max-width: 1000px;
-        display: flex;
-        flex-flow: column nowrap;
-    }
-
     /* form inputs */
     input[type="text"], input[type="number"], select {
         background-color: #FEFEFE;

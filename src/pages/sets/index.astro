@@ -22,7 +22,7 @@ const sets = await db.select().from(Set);
                 { sets.map(set => 
                     <tr>
                         <td><a href={"/sets/" + set.id}>{set.name}</a></td>
-                        <td>{format(set.releaseDate as Date, "yyyy-MM-dd")}</td>
+                        <td>{set.releaseDate && format(set.releaseDate, "yyyy-MM-dd")}</td>
                     </tr>)}
             </tbody>
         </table>

@@ -1,5 +1,53 @@
 /* global styles for the application */
 
+body {
+    margin: 0;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
 a {
     text-decoration: none;
+}
+
+.inner-flex {
+    margin: 0 auto;
+    max-width: 1000px;
+    display: flex;
+    flex-flow: column nowrap;
+    position: relative;
+}
+
+.button {
+    font-family: "Lato", "Helvetica Neue", Arial, Helvetica, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    width: fit-content;
+    position: relative;
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 0 10px;
+    height: 28px;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: bold !important;
+    text-decoration: none !important;
+    color: #551a8b;
+    background-color: #F9F7F5;
+    border: 1px solid rgba(85,26,139,0.5);
+    border-radius: 3px;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,0.06);
+    transition: color, border-color, background-color, fill;
+    transition-duration: 50ms;
+    transition-timing-function: linear;
+}
+
+.button+.button{
+    margin: 0 0 0 6px;
 }
