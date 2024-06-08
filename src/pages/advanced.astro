@@ -86,16 +86,16 @@ console.log(tags);
         <form id="advanced-search-form" method="post">
             <div class="inner-flex">
                 <FormRow label="Name" _for="search-name">
-                    <input name="name" id="search-name" type="text"
+                    <input name="name" id="search-name" type="text" autocorrect="off" spellcheck="false"
                         placeholder='Any words in the name, e.g. "Akane"' />
                 </FormRow>
                 <FormRow label="Ability" _for="search-ability">
-                    <input name="ability" id="search-ability" type="text"
+                    <input name="ability" id="search-ability" type="text" autocorrect="off" spellcheck="false"
                         placeholder='Any card text, e.g. "When this card attacks"' />
                 </FormRow>
                 
                 <FormRow label="Card No." _for="search-cardno">
-                    <input name="cardno" id="search-cardno" type="text"
+                    <input name="cardno" id="search-cardno" type="text" autocorrect="off" spellcheck="false"
                         placeholder='Card number, e.g. "SPY/S106-E001"' />
                 </FormRow>
                 <FormRow label="Type" _for="search-type">
@@ -224,19 +224,17 @@ console.log(tags);
             </div>
         </form>
     </main>
+
 </MainLayout>
 
 <script>
     //You can import both the npm library and its css on the client like this:
     import TomSelect from "tom-select";
     import "tom-select/dist/css/tom-select.default.css";
-    import scope from "astro:scope";
+    //get the current scope to apply it on the dynamically created objects.
+    import scope from "astro:scope"; 
 
-    interface TriggerData {
-        id: string, name: string, image: string
-    };
-
-    console.log(scope);
+    import { getAllTriggerInfos, type TriggerInfo } from "@scripts/trigger";
 
     new TomSelect("#search-type", {});
     new TomSelect("#search-color", {});
@@ -248,31 +246,22 @@ console.log(tags);
     new TomSelect("#search-trigger", {
         valueField: "id",
         searchField: ["name"],
-        options: [
-            {id:"none", name:"No Trigger", image:"images/triggers/no_trigger.webp"},
-            {id:"soul", name:"Soul", image:"images/triggers/soul.webp"},
-            {id:"2soul", name:"2 Soul", image:"images/triggers/2soul.webp"},
-            {id:"bar", name:"Treasure (Bar)", image:"images/triggers/bar.webp"},
-            {id:"bag", name:"Pool (Bag)", image:"images/triggers/bag.webp"},
-            {id:"book", name:"Draw (Book)", image:"images/triggers/book.webp"},
-            {id:"gate", name:"Gate (Pants)", image:"images/triggers/gate.webp"},
-            {id:"wind", name:"Return (Wind)", image:"images/triggers/wind.webp"},
-            {id:"shot", name: "Shot (Burn)", image:"images/triggers/shot.webp"},
-            {id:"choice", name:"Choice", image:"images/triggers/choice.webp"},
-            {id:"door", name:"Comeback (Door)", image:"images/triggers/door.webp"},
-            {id:"standby", name:"Standby", image:"images/triggers/standby.webp"}
-        ],
+        options: getAllTriggerInfos(),
         placeholder: "Choose a trigger...",
-        //items: [""],
         render: {
             option: renderTriggerOption,
             item: renderTriggerOption
         }
     });
 
-    function renderTriggerOption(data:TriggerData, escape: (txt:string)=>string) {
+    //TODO: Try to do this with a template tag. That can use Astro Components, and it has better highlighting, and we probably don't need scope.
+    //We read the content from the HTML element when we start the client-side script.
+    //We should also use our trigger-icon component then. We don't need the image links or the name then, just the ID.
+    //TODO: We still need name for span, so might need to import config here as well?
+
+    function renderTriggerOption(data:TriggerInfo, escape: (txt:string)=>string) {
         return `<div>
-                    <img class="trigger-image" data-astro-cid-${scope} src="${escape(data.image)}" alt="${escape(data.id ?? "any")}" />
+                    <img class="trigger-image" data-astro-cid-${scope} src="${escape(data.image)}" alt="${escape(data.id)}" />
                     <span class="trigger-name" data-astro-cid-${scope}>${escape(data.name)}</span>
                 </div>`;
     }
@@ -311,7 +300,8 @@ console.log(tags);
     @media screen and (min-width: 740px) {
         .content {
             & input[type="text"], input[type="number"], select {
-            max-width: 420px;
+                max-width: 420px;
+            }
         } 
     }
 

@@ -10,7 +10,7 @@ const { searchText } = Astro.props;
             <span class="visually-hidden">Riki</span>
             <Icon name="riki_icon" />
         </a>
-        <form action="/search" accept-charset="UTF-8" method="get" class="header-search">
+        <form action="/search" accept-charset="UTF-8" method="get" class="header-search-form">
             <label for="header-search-field" class="visually-hidden">Search for Weiß Schwarz cards</label> 
             <input type="text" name="q" id="header-search-field" value={searchText} placeholder="Search for Weiß Schwarz cards…" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" class="header-search-field"> 
             
@@ -22,16 +22,16 @@ const { searchText } = Astro.props;
         </form>
     
         <div class="header-links">
-            <div class="header-link-divider"></div> 
-            <a href="/advanced" class="header-link double-pad-left">
+            <div class="divider"></div> 
+            <a href="/advanced">
                 <Icon name="table" />
                 <span>Advanced</span>
             </a> 
-            <a href="/docs/syntax" class="header-link">
+            <a href="/docs/syntax">
                 <Icon name="help" />
                 <span>Syntax</span>
             </a> 
-            <a href="/sets" class="header-link">
+            <a href="/sets">
                 <Icon name="crown" /> <!-- can use width/height/color freely -->
                 <span>Sets</span>
             </a>
@@ -43,7 +43,7 @@ const { searchText } = Astro.props;
     /*TODO: define a color scheme and use variables for it. */
 
     #search-header {
-        width: 100%;
+        /*width: 100%; -> this causes the page to scroll for some reason */ 
         padding: 0 2.5%;
         background-color: burlywood;
     }
@@ -61,7 +61,7 @@ const { searchText } = Astro.props;
         height: 52px;
     }
 
-    .header-search {
+    .header-search-form {
         display: flex;
         flex-flow: row nowrap;
         justify-content: flex-start;
@@ -95,9 +95,57 @@ const { searchText } = Astro.props;
         }
     }
 
+    .header-links {
+        display: none; /* do not display at lower resolutions */
+    }
+
+    .divider {
+        height: 20px;
+        width: 1px;
+        border-right: 1px solid rgba(255,255,255,0.4);
+        margin: 0 6px 0 0;
+    }
+
+    .header-links a {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        height: 52px;
+        font-size: 14px;
+        line-height: 22px;
+        color: #555;
+        padding: 0 7px;
+
+        &:first-child {
+            padding-left: 14px;
+        }
+
+        &:hover, &:active, &:focus {
+            color: #111;
+            text-decoration: underline;
+        }
+
+        & svg {
+            width: 16px;
+            height: 16px;
+            margin: 0 7px 0 0;
+        }
+    }
+
     @media screen and (min-width: 420px) {
         .header-logo {
             flex: 0 0 34px;
+        }
+    }
+
+    @media screen and (min-width: 800px) {
+        .header-links {
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: flex-start;
+            align-items: center;
+            height: 52px;
         }
     }
 </style>

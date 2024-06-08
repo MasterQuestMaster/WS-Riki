@@ -4,6 +4,8 @@ import SearchHeader from '@layouts/SearchHeader.astro';
 
 import { db, eq, Card, Set } from 'astro:db';
 import { dbarray } from 'src/scripts/db-utils';
+import { getTriggerInfo } from '@scripts/trigger';
+import { Icon } from 'astro-icon/components';
 
 const { cardid = "" } = Astro.params;
 console.log(cardid);
@@ -27,6 +29,51 @@ const set = selectCardResult.Set;
 <MainLayout>
     <SearchHeader />
     <main>
+        <article class="card-details">
+            <div class="inner-flex">
+                <section class="card-image">
+                    <img class="card" src={card.image} alt={card.name} loading="eager" />
+                </section>
+                <section class="card-actions">
+                    <button name="button" type="submit" class="button-n" title="Rotate Card" rel="nofollow" data-component="card-rotation-button" data-rotation-class="rotate-90cw">
+                        <Icon name="rotate" />
+                        <b>Rotate</b>
+                    </button>
+                </section>
+                <section class="card-text">
+                    <div class="card-header">
+                        <h1 class="card-name">{card.name}</h1>
+                        <span class="card-triggers">
+                        {
+                            getTriggerInfo(...dbarray(card.trigger)).map((trigger) => 
+                                <img class="trigger-image" src={trigger.image} alt={trigger.name} />
+                            )
+                        }
+                        </span>
+                    </div>
+                    <div class="card-subheader">
+                        <span class="card-number">{card.cardno}</span> &mdash;
+                        <span class="card-rarity">{card.rarity}</span> &mdash;
+                        <span class="set-name">{set.name}</span>
+                    </div>
+                    <p class="card-type">{card.type}</p>
+                    <div class="card-traits">
+                    { dbarray(card.traits).map((trait) => 
+                        <span class="trait">{trait}</span>
+                    )}
+                    </div>
+                    <div class="abilities">
+                    <!-- TODO: Replace text with symbols (html svg, or maybe a symbol font) -->
+                    { dbarray(card.abilities).map((abil) => 
+                        <p>
+                            {abil}
+                        </p>
+                    )}
+                    </div>
+                    <div class="flavor">{card.flavor}</div>
+                </section>
+            </div>
+        </article>
         <div class="card">
             <p>Code: {card.cardno}</p>
             <p>Card Name: {card.name}</p>
@@ -54,3 +101,128 @@ const set = selectCardResult.Set;
         </div>
     </main>
 </MainLayout>
+
+<style>
+    .card-details {
+        padding: 15px 2.5%;
+        background-color: #F5F6FA;
+        border-bottom: 1px dashed #CDCDCD;
+        perspective: 2000px;
+    }
+
+    .inner-flex {
+        position: relative;
+    }
+
+    .card-image {
+        border-radius: 100%;
+        margin: 0 auto 15px;
+        overflow: visible;
+        /*padding-bottom: 139%;*/
+        position: relative;
+        z-index: 10000;
+        height: 400px;
+        width: 300px;
+
+        & .card {
+            width: 100%;
+            box-shadow: 1px 1px 8px rgba(0,0,0,0.5);
+        }
+    }
+
+    .card-text {
+        display: block;
+        border: 1px solid rgba(0,0,0,0.25);
+        border-top: 3px solid black;
+        border-bottom: 3px solid black;
+        border-radius: 4px;
+        background: #fff;
+        margin: 15px auto 0 auto;
+        max-width: 500px;
+        padding: 0 0 15px 0;
+        font-size: 16px;
+        color: #16161D;
+        width: 100%;
+    }
+
+    .card-header {
+        font-weight: bold;
+        padding: 8px 12px 8px 12px;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        line-height: 20px;
+        font-size: 16px;
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-name {
+        margin: 0;
+    }
+
+    .trigger-image {
+        height: 2em;
+    }
+
+    .card-subheader {
+        color: #585858;
+    }
+
+    .flavor {
+        color:#585858;
+        font-style: italic;
+    }
+
+    @media screen and (min-width: 350px) {
+        .card-image {
+            padding-bottom: 0;
+            height: 468px;
+            width: 336px;
+        }
+    }
+
+    @media screen and (min-width: 720px) {
+        .inner-flex {
+            flex-flow: row wrap;
+            justify-content: center;
+        }
+
+        .card-image {
+            flex: 0 0 336px;
+        }
+
+        .card-text {
+            margin: 15px 15px 0 0;
+            flex-grow: 1;
+            width: auto;
+        }
+    }
+
+    @media screen and (min-width: 980px) {
+        .card-details {
+            padding: 20px 2.5% 64px 2.5%;
+            perspective: 1000px;
+        }
+
+        .inner-flex {
+            justify-content: flex-start;
+        }
+
+        .card-image {
+            margin: 0;
+            flex: 0 0 336px;
+        }
+
+        .card-text {
+            width: 36.5%;
+            margin: 20px;
+            /*margin: 20px 0 -25px -15px; /* this moves the box inside the img */
+            z-index: 1;
+        }
+
+        .card-header {
+            padding: 9px 12px 8px 12px;
+        }
+    } 
+</style>

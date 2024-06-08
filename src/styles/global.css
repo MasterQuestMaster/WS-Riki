@@ -51,3 +51,14 @@ a {
 .button+.button{
     margin: 0 0 0 6px;
 }
+
+img.card {
+    border-radius: 4.75% / 3.5%;
+    background-image: repeating-linear-gradient(-55deg, #DDD, #DDD 5px, #CCC 5px, #CCC 10px);
+    color: #000;
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    overflow: hidden;
+    text-align: center;
+}

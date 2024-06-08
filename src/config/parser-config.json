@@ -9,7 +9,11 @@
         "name": {
             "description": "Name",
             "type": "string",
-            "dbColumn": "Card.name"
+            "dbColumn": "Card.name",
+            "autoReplace": [
+                {"search":"<<", "replace":"《"},
+                {"search":">>", "replace":"》"}
+            ]
         },
         "type": {
             "description": "Type",
@@ -143,7 +147,15 @@
             "allowSearchNone": true,
             "autoReplace": [
                 {"search":"<<", "replace":"《"},
-                {"search":">>", "replace":"》"}
+                {"search":">>", "replace":"》"},
+
+                {"search":"[v]", "replace": "【REVERSE】"},
+                {"search":"[>]", "replace": "【REST】"},
+                {"search":"[^]", "replace": "【STAND】"},
+
+                {"pattern":"(?<!\\w)reversed(?!\\w)", "replace":"【REVERSE】"},
+                {"pattern":"(?<!\\w)rested(?!\\w)", "replace":"【REST】"},
+                {"pattern":"(?<!\\w)standing(?!\\w)", "replace":"【STAND】"}
             ]
         },
         "flavor": {

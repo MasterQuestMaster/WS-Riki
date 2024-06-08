@@ -1,0 +1,55 @@
+{
+    "_unknown": {
+        "exclude": "true",
+        "name": "Unknown Trigger",
+        "image": "/images/triggers/any_trigger.webp"
+    },
+    "no_trigger": {
+        "name": "No Trigger",
+        "image": "/images/triggers/no_trigger.webp"
+    },
+    "soul": {
+        "name": "Soul",
+        "image": "/images/triggers/soul.webp"
+    },
+    "2soul": {
+        "name": "2 Soul",
+        "image": "/images/triggers/2soul.webp"
+    },
+    "return": {
+        "name":"Return (Wind)", 
+        "image":"/images/triggers/wind.webp"
+    },
+    "shot": {
+        "name": "Shot (Burn)", 
+        "image":"/images/triggers/shot.webp"
+    },
+    "choice": {
+        "name":"Choice", 
+        "image":"/images/triggers/choice.webp"
+    },
+    "treasure": {
+        "name":"Treasure (Bar)", 
+        "image":"/images/triggers/bar.webp"
+    },
+    "pool": {
+        "name":"Pool (Bag)", 
+        "image":"/images/triggers/bag.webp"
+    },
+    "comeback": {
+        "name":"Comeback (Door)", 
+        "image":"/images/triggers/door.webp"
+    },
+    "standby": {
+        "name":"Standby", 
+        "image":"/images/triggers/standby.webp"
+    },
+    "draw": {
+        "name":"Draw (Book)", 
+        "image":"/images/triggers/book.webp"
+    },
+    "gate": {
+        "name":"Gate (Pants)", 
+        "image":"/images/triggers/gate.webp"
+    }
+}

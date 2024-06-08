@@ -66,6 +66,7 @@ export default async function seed() {
 				"【CONT】 All of your characters get +1000 power and +1 soul. (: When this card triggers, you may choose one of your opponent's characters, and return it to your opponent's hand.)",
 				"(【RETURN】: When this card triggers, you may choose 1 of your opponent's characters, and return it to his or her hand)"
 			],
+			flavor: "Yuuki: \"After all this time... I think I know why now...\"",
 			image: "https://en.ws-tcg.com/wp/wp-content/images/cardimages/s/sao_se26/SAO_SE26_E06.png"
 		}
 	]);
