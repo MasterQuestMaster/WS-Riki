@@ -26,16 +26,22 @@ const card = selectCardResult.Card;
 const set = selectCardResult.Set;
 
 ---
+<!-- CX imagages are upright by default, by the same image with (H) appended from ws-tcg is horizontal.
+-->
 <MainLayout>
     <SearchHeader />
     <main>
         <article class="card-details">
             <div class="inner-flex">
-                <section class="card-image">
+                <!-- climax are rotated by default -->
+                <section id="main-image-container" class:list={
+                    ["card-image", {rotated: (card.type == "Climax")}]
+                }>
                     <img class="card" src={card.image} alt={card.name} loading="eager" />
                 </section>
                 <section class="card-actions">
-                    <button name="button" type="submit" class="button-n" title="Rotate Card" rel="nofollow" data-component="card-rotation-button" data-rotation-class="rotate-90cw">
+                    <button id="rotate-button" type="button" class="button" title="Rotate Card"
+                        data-target="main-image-container" data-rotation-class="rotated">
                         <Icon name="rotate" />
                         <b>Rotate</b>
                     </button>
@@ -102,6 +108,16 @@ const set = selectCardResult.Set;
     </main>
 </MainLayout>
 
+<script>
+    const rotateButton = document.getElementById("rotate-button");
+    rotateButton?.addEventListener("click", (e) => {
+        const btn = e.currentTarget as HTMLButtonElement;
+        const target = document.getElementById(btn.dataset.target ?? "");
+        console.log("Target:", target);
+        target?.classList.toggle(btn.dataset.rotationClass ?? "");
+    });
+</script>
+
 <style>
     .card-details {
         padding: 15px 2.5%;
@@ -127,7 +143,19 @@ const set = selectCardResult.Set;
         & .card {
             width: 100%;
             box-shadow: 1px 1px 8px rgba(0,0,0,0.5);
+            transition: transform 350ms;
         }
+    }
+
+    .card-image.rotated .card {
+        transform: rotate(-90deg) scale(0.75);
+    }
+
+    .card-actions {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        flex-flow: row nowrap;
     }
 
     .card-text {
@@ -212,6 +240,13 @@ const set = selectCardResult.Set;
         .card-image {
             margin: 0;
             flex: 0 0 336px;
+        }
+
+        .card-actions {
+            left: 0;
+            position: absolute;
+            top: 484px;
+            width: 336px;
         }
 
         .card-text {
