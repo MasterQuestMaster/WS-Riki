@@ -3,9 +3,12 @@ import MainLayout from '@layouts/MainLayout.astro';
 import SearchHeader from '@layouts/SearchHeader.astro';
 
 import { db, eq, Card, Set } from 'astro:db';
+import { toPascal } from 'src/scripts/utils';
 import { dbarray } from 'src/scripts/db-utils';
 import { getTriggerInfo } from '@scripts/trigger';
 import { Icon } from 'astro-icon/components';
+import TraitBox from '@components/TraitBox.astro';
+import ColorIndicator from '@components/ColorIndicator.astro';
 
 const { cardid = "" } = Astro.params;
 console.log(cardid);
@@ -25,85 +28,96 @@ if(!selectCardResult) {
 const card = selectCardResult.Card;
 const set = selectCardResult.Set;
 
+const soulTrigger = getTriggerInfo(["soul"])[0];
+
 ---
 <!-- CX imagages are upright by default, by the same image with (H) appended from ws-tcg is horizontal.
+
+When formatting ability text, do the following:
+- make traits have a link to a search that searches for all characters with that trait.
+- Make keywords (Alarm, Brainstorm, Great Performance...) bold.
+- Format cont/auto/act as boxes
+
 -->
 <MainLayout>
     <SearchHeader />
     <main>
-        <article class="card-details">
+        <div class="card-details">
             <div class="inner-flex">
                 <!-- climax are rotated by default -->
-                <section id="main-image-container" class:list={
-                    ["card-image", {rotated: (card.type == "Climax")}]
-                }>
+                <figure id="main-image-container" class:list={["card-image", {rotated: (card.type == "Climax")}]}>
                     <img class="card" src={card.image} alt={card.name} loading="eager" />
-                </section>
-                <section class="card-actions">
-                    <button id="rotate-button" type="button" class="button" title="Rotate Card"
-                        data-target="main-image-container" data-rotation-class="rotated">
-                        <Icon name="rotate" />
-                        <b>Rotate</b>
-                    </button>
-                </section>
-                <section class="card-text">
-                    <div class="card-header">
+                </figure>
+                <div class="card-actions">
+                    { (card.type == "Climax") && 
+                        <button id="rotate-button" type="button" class="button" title="Rotate Card" 
+                            data-target="main-image-container" data-rotation-class="rotated">
+                            <Icon name="rotate" />
+                            <b>Rotate</b>
+                        </button> 
+                    }
+                </div>
+
+                <!-- Card Text -->
+                <article class:list={["card-text", card.color.toLowerCase()]}>
+                    <header class="card-header">
                         <h1 class="card-name">{card.name}</h1>
-                        <span class="card-triggers">
-                        {
-                            getTriggerInfo(...dbarray(card.trigger)).map((trigger) => 
-                                <img class="trigger-image" src={trigger.image} alt={trigger.name} />
-                            )
-                        }
-                        </span>
-                    </div>
+                        <div class="card-icons">
+                            <span>
+                                { dbarray(card.icons).map((icon) => 
+                                    <img src={`/images/${icon.toLowerCase()}.webp`} title={toPascal(icon)} alt={toPascal(icon)} />
+                                )}
+                            </span>
+                            <span>
+                                { getTriggerInfo(dbarray(card.trigger)).map((trigger) => 
+                                    <img src={trigger.image} title={trigger.name} alt={trigger.name} />
+                                )}
+                            </span>
+                        </div>
+                    </header>
                     <div class="card-subheader">
-                        <span class="card-number">{card.cardno}</span> &mdash;
+                        <span class="card-number">{card.cardno}</span>
                         <span class="card-rarity">{card.rarity}</span> &mdash;
-                        <span class="set-name">{set.name}</span>
+                        <a class="set-name" href={`/sets/${set.id}`}>{set.name}</a>
                     </div>
-                    <p class="card-type">{card.type}</p>
-                    <div class="card-traits">
-                    { dbarray(card.traits).map((trait) => 
-                        <span class="trait">{trait}</span>
-                    )}
+                    <div class="type-line">
+                        <ColorIndicator color={card.color} />
+                        <span class="card-type">{card.type}</span>
                     </div>
                     <div class="abilities">
                     <!-- TODO: Replace text with symbols (html svg, or maybe a symbol font) -->
-                    { dbarray(card.abilities).map((abil) => 
-                        <p>
-                            {abil}
-                        </p>
-                    )}
+                        { dbarray(card.abilities).map((abil) => 
+                            <p>{abil}</p>
+                        )}
+                        <p><span class="symbol">AUTO</span> When your other character is placed on the stage by "Change", that character gets +1000 power until the end of the next turn. For each climax revealed among those cards, choose up to 1 《Berlint》 character in your waiting room, and return it to your hand.</p>
                     </div>
                     <div class="flavor">{card.flavor}</div>
-                </section>
+
+                    <footer class="card-footer">
+                        <div class="card-stats">
+                            <!-- TODO: Use sword icon on the left and display the power. Also use a hexagon and display the amount of soul inside of it.
+                                Maybe we can even use the blank trigger template as background image for a number. 
+                            -->
+                            <div title={`Level ${card.level}, Cost ${card.cost}`}>
+                                <!-- Maybe the icon should be a blank version of the "Level" circle on WS cards? Or a simplified version. -->
+                                <Icon class="stat-icon" name="winged-shield" />
+                                <span class="stat-number" aria-label="Level/Cost">{card.level}/{card.cost}</span>
+                            </div>
+                            <div title={card.power + " Power"}>
+                                <Icon class="stat-icon" name="sword" /> 
+                                <span class="stat-number" aria-label="Power" >{card.power}</span>
+                            </div>
+                            <div title={card.soul + " Soul"}>
+                                <img class="stat-icon" src={soulTrigger.image} alt={soulTrigger.name} />
+                                <span class="stat-number" aria-label="Soul">{card.soul}</span>
+                            </div>
+                        </div>
+                        <div class="card-traits">
+                            { dbarray(card.traits).map((trait) => <TraitBox>{trait}</TraitBox>) }
+                        </div>
+                    </footer>
+                </article>
             </div>
-        </article>
-        <div class="card">
-            <p>Code: {card.cardno}</p>
-            <p>Card Name: {card.name}</p>
-            <p>Type: {card.type}</p>
-            <p>Color: {card.color}</p>
-            <p>Rarity: {card.rarity}</p>
-            <p>Expansion: {set.name}</p>
-            <p>Level: {card.level}</p>
-            <p>Cost: {card.cost}</p>
-            <p>Power: {card.power}</p>
-            <p>Soul: {card.soul}</p>
-            <p>
-                Trigger: {dbarray(card.trigger).map(trigger => 
-                <div class="trigger-icon">{trigger}</div>)}
-            </p>
-            <p>
-                Traits: {dbarray(card.traits).map(trait => 
-                <div class="trait">{trait}</div>)}
-            </p>
-            <p>Abilities ({dbarray(card.abilities).length}): {dbarray(card.abilities).join("\n")}</p>
-            <p>Tags: {dbarray(card.tags).map(tag =>
-                <div class="tag">{tag}</div>)}
-            </p>
-            <img src={card.image} alt={card.name} />
         </div>
     </main>
 </MainLayout>
@@ -162,7 +176,7 @@ const set = selectCardResult.Set;
         display: block;
         border: 1px solid rgba(0,0,0,0.25);
         border-top: 3px solid black;
-        border-bottom: 3px solid black;
+        border-bottom: 5px solid black;
         border-radius: 4px;
         background: #fff;
         margin: 15px auto 0 auto;
@@ -175,7 +189,7 @@ const set = selectCardResult.Set;
 
     .card-header {
         font-weight: bold;
-        padding: 8px 12px 8px 12px;
+        padding: 8px 12px 8px 12px; /*trbl*/
         border-bottom: 1px solid rgba(0,0,0,0.1);
         line-height: 20px;
         font-size: 16px;
@@ -189,17 +203,93 @@ const set = selectCardResult.Set;
         margin: 0;
     }
 
-    .trigger-image {
-        height: 2em;
+    .card-icons {
+        & span { margin-left: .5em; }
+        & img { height: 32px; }
     }
 
     .card-subheader {
         color: #585858;
+        padding: 5px 12px;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .type-line {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+        padding: 5px 12px;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .card-type {
+        margin-left: 7px;
+    }
+
+    .card-level-cost {
+        margin-left: 10px;
+        padding: 2px 10px;
+        font-size: 1.1em;
+        background-color: #eee;
+        border-radius: .3em;
+    }
+
+    /* CONT/AUTO/ACT symbols */
+    .symbol {
+        padding:2px;
+        border-radius: 4px;
+        color: white;
+        background-color: black;
+        font-family: "Arial Narrow", Helvetica, sans-serif;
+        font-size: .75em;
+        text-transform: uppercase;
+    }
+
+    .abilities {
+        padding: 0 12px;
     }
 
     .flavor {
         color:#585858;
         font-style: italic;
+    }
+
+    .card-footer {
+        padding: 5px 12px 0 12px;
+        border-top: 1px solid rgba(0,0,0,0.1);
+
+        display: flex;
+        flex-flow: row wrap;
+        align-items: center;
+        justify-content: space-between;
+
+        /* traits */
+        & .card-traits > span {
+            margin-right: .3em;
+        }
+
+        /* power/soul boxes */
+        & .card-stats > div {
+            display: inline-flex;
+            flex-flow: row nowrap;
+            align-items: center;
+
+            margin-right: .3em;
+            padding: 5px;
+            border-radius: .3em;
+            background-color: #eee;
+        }
+    }
+
+    /* icon scales with font-size, img with height */
+    .stat-icon {
+        font-size: 24px;
+        height: 24px;
+        margin-right: 3px;
+    }
+
+    .stat-number {
+        font-size: 1.1em;
     }
 
     @media screen and (min-width: 350px) {
@@ -254,10 +344,6 @@ const set = selectCardResult.Set;
             margin: 20px;
             /*margin: 20px 0 -25px -15px; /* this moves the box inside the img */
             z-index: 1;
-        }
-
-        .card-header {
-            padding: 9px 12px 8px 12px;
         }
     } 
 </style>

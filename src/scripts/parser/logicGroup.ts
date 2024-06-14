@@ -113,3 +113,15 @@ export function stringifyLogicTree<TokenType>(
 
     return `"${tree.type.toUpperCase()}": {\n${membersAsText.join(",\n")}\n}`;
 }
+
+export function getSingleToken<TokenType>(tree:LogicTree<TokenType>) {
+    if(tree.members.length !== 1) return null;
+    const singleMember = tree.members[0];
+    
+    if(Array.isArray(singleMember)) {
+        return (singleMember.length == 1) ? singleMember[0] : null;
+    }
+    else {
+        return singleMember;
+    }
+}

@@ -7,7 +7,7 @@ import CardDetailRow from "@components/CardDetailRow.astro";
 import { db, Card, Set, eq } from 'astro:db';
 import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "@scripts/parser/queryParser";
 import { DrizzleParser, type IKeywordOptions as DrizzleKeywordOptions } from "@scripts/parser/drizzleParser";
-import { stringifyLogicTree } from "@scripts/parser/logicGroup";
+import { stringifyLogicTree, getSingleToken } from "@scripts/parser/logicGroup";
 import { stringifySearchToken, objectMap } from "@scripts/utils";
 import { getColumnFromString } from "@scripts/db-utils";
 
@@ -29,11 +29,24 @@ const parser = new QueryParser(parserConfig.keywords as QueryKeywordOptions);
 let tree = parser.parse(query);
 console.log(stringifyLogicTree(tree, stringifySearchToken));
 
+
 //Parse the Logic Tree from the Query Parser into a Drizzle "Where" clause.
 const drizzleConfig = parserConfig.keywords as DrizzleKeywordOptions;
 const drizzleParser = new DrizzleParser(drizzleConfig);
 //TODO: error handling for the possible exceptions here.
 const drizzleFilterParams =  drizzleParser.parseLogicTree(tree);
+
+//Check if a search for only a single set was made. If so, redirect to /sets/...
+const singleToken = getSingleToken(tree);
+if(singleToken?.type == "expression" && singleToken.keyword == "set") {
+    //check if exactly 1 set that fits the criteria exists.
+    const setResults = await db.select({id: Set.id}).from(Set).where(drizzleFilterParams);
+
+    if(setResults.length == 1) {
+        const setid = setResults[0].id;
+        return Astro.redirect(`/sets/${encodeURIComponent(setid)}?as=${encodeURIComponent(displayFormat)}`);
+    }
+}
 
 //Check if we have any keywords that require joining of the "Set" table.
 // const usedSetKeywords = Object.keys(drizzleConfig).filter((key) => {
