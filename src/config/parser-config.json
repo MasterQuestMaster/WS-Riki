@@ -48,12 +48,12 @@
             "forceExactMatches": true,
             "dbColumn": "Card.rarity"
         },
-        "expansion": {
-            "description": "Expansion",
+        "set": {
+            "description": "Set Name",
             "type": "string",
-            "aliases": ["set", "e", "exp"],
+            "aliases": ["expansion", "e", "exp"],
             "dbColumn": [
-                "Card.setId",
+                "Set.id",
                 "Set.name",
                 "Set.shortName"
             ]

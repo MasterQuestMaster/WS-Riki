@@ -16,7 +16,7 @@ export interface TriggerInfo {
  * Empty or undefined will return the "none" trigger.
  * Triggers not defined in trigger-config will return "any" trigger.
  */
-export function getTriggerInfo(...triggerNames:string[]):TriggerInfo[] {
+export function getTriggerInfo(triggerNames:string[]):TriggerInfo[] {
     if(!triggerNames?.length) {
         //no trigger
         return [triggerInfo["no_trigger"]];

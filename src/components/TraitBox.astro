@@ -1,0 +1,21 @@
+---
+const {...attributes} = Astro.props;
+---
+<span class="trait" {...attributes}><slot/></span>
+<style>
+    .trait {
+        padding: 0 .5em;
+        background: linear-gradient(#f1910d, #faec00, #f1910d);
+        border: 1px solid #9a6541;
+        border-radius: .5em / .75em;
+
+        font-family: Vagabond, Helvetica, sans-serif;
+        font-size: .9em;
+        font-weight: bold;
+
+        box-shadow: 
+            inset 1px 1px 3px #783a00,
+            inset -1px -1px 3px white,
+            0 0 2px #444;
+    }
+</style>

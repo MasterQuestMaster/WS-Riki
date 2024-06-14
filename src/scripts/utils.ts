@@ -19,6 +19,11 @@ export function formatDate(date:Date) {
   })
 }
 
+export function toPascal(text:string|undefined) {
+  if(!text?.length) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
+
 /**
  * Removes wrapped quotes ("/') and unescapes any of that type of quote in the text (\").
  * If the text is not wrapped in quotes, no unescape will be performed.

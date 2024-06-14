@@ -26,12 +26,22 @@ if(Astro.request.method === "POST") {
 
         For name and ability we should split the values (but keep quotes strings).
         For name just search without keyword.
+
+        For "as" (and "order" later) we must treat them specially to add them as url parameters.
+
+        TODO: When searching from advanced search, the query will contains a space even if no criteria was entered.
     */
+
+    const urlParams = new URLSearchParams();
 
     const queryArray = Array.from(data)
         .filter(([key, val]) => val.toString().trim() && !key.endsWith("-op") )
         .map(([key,val]) => {
-            if(key == "name" || key == "ability") {
+            if(key=="as" || key=="order") {
+                //store display-related params outside of query.
+                urlParams.set(key, val.toString());
+            }
+            else if(key == "name" || key == "ability") {
                 //split into freetext words and quoted parts.
                 const wordPattern = /((?<qt>["']).*?[^\\](\k<qt>|$)|[^\s]+)/g;
                 //if g flag is used, the return value is a string[] with the matches.
@@ -57,8 +67,9 @@ if(Astro.request.method === "POST") {
 
     console.log(queryArray);
     
-    const query = queryArray.join(" ");
-    return Astro.redirect("/search?q=" + encodeURIComponent(query));
+    //add "q" query string (if "as" was specified, it is already in the array).
+    urlParams.set("q", queryArray.join(" "));
+    return Astro.redirect("/search?" + urlParams.toString());
 
     // data.forEach((value, key) => {
     //     console.log(key, value);
@@ -67,7 +78,7 @@ if(Astro.request.method === "POST") {
     //console.log(data.getAll("icon"));
 }
 
-//Load expansions
+//Load Sets
 const sets = await db.select().from(Set);
 
 const traits = await getDistinctArrayColValues(Card.traits);
@@ -136,9 +147,9 @@ console.log(tags);
                         <option value="CR">Climax Rare</option>
                     </select>
                 </FormRow>
-                <FormRow label="Expansion" _for="search-set">
+                <FormRow label="Set" _for="search-set">
                     <select name="set" id="search-set" multiple>
-                        <option value="">Choose an expansion...</option>
+                        <option value="">Choose a set...</option>
                         {sets.map((set) =>
                             <option value={set.id}>{set.name} ({set.id})</option>
                         )}
@@ -262,7 +273,7 @@ console.log(tags);
 
     function renderTriggerOption(data:TriggerInfo, escape: (txt:string)=>string) {
         return `<div>
-                    <img class="trigger-image" data-astro-cid-${scope} src="${escape(data.image)}" alt="${escape(data.id)}" />
+                    <img class="game-icon" data-astro-cid-${scope} src="${escape(data.image)}" alt="${escape(data.id)}" />
                     <span class="trigger-name" data-astro-cid-${scope}>${escape(data.name)}</span>
                 </div>`;
     }
@@ -327,11 +338,6 @@ console.log(tags);
     }
 
     /* icons */
-
-    .trigger-image {
-        height: 2em;
-    }
-
     .game-icon {
         height: 2em;
     }
