@@ -251,7 +251,8 @@ console.log(tags);
         render: {
             option: renderTriggerOption,
             item: renderTriggerOption
-        }
+        },
+        onItemAdd: clearTomFilter
     });
 
     //TODO: Try to do this with a template tag. That can use Astro Components, and it has better highlighting, and we probably don't need scope.
@@ -264,6 +265,15 @@ console.log(tags);
                     <img class="trigger-image" data-astro-cid-${scope} src="${escape(data.image)}" alt="${escape(data.id)}" />
                     <span class="trigger-name" data-astro-cid-${scope}>${escape(data.name)}</span>
                 </div>`;
+    }
+
+    function clearTomFilter(value:any, $item:any) {
+        console.log(value, $item, this);
+        //todo: the filter is not reset. must manually do that.
+        this.setTextboxValue("");
+        //it works but it's not great. There doesn't seem to be a method for resetting the filter?
+        this.control_input.click();
+        this.control_input.click();
     }
 
 </script>
