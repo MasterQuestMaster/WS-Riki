@@ -1,6 +1,5 @@
 {
     "_unknown": {
-        "exclude": "true",
         "name": "Unknown Trigger",
         "image": "/images/triggers/any_trigger.webp"
     },

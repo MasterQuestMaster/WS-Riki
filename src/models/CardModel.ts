@@ -1,4 +1,4 @@
-export interface CardModel {
+export default interface CardModel {
     id: string;
     cardno: string;
     name: string;

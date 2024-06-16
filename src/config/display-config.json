@@ -3,6 +3,7 @@
         "join": [],
         "select": {
             "id": "Card.id",
+            "cardno": "Card.cardno",
             "name": "Card.name",
             "image": "Card.image"
         }

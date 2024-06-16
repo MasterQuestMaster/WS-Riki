@@ -1,0 +1,115 @@
+---
+//Use a special interface instead of cardmodel because we only select limited columns.
+import { toPascal } from '@scripts/utils';
+import type ListCardModel from 'src/models/ListCardModel';
+
+import rarityConfig from "src/config/rarity-config.json";
+
+interface Props {
+    cards: ListCardModel[]
+}
+
+const { cards } = Astro.props;
+
+const cardTypes: Record<string,string> = {
+    "Character": "CH",
+    "Event": "EV",
+    "Climax": "CX"
+};
+
+---
+<div class="list-wrapper">
+    <table class="card-list">
+        <thead>
+            <tr>
+                <th>Card No.</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Color</th>
+                <th title="Level/Cost">LV/C</th>
+                <th>Rarity</th>
+                <th>Set</th>
+            </tr>
+        </thead>
+        <tbody>
+            {cards.map((card) => 
+                <tr data-card-image={card.image}>
+                    <td>
+                        <a href={"/card/" + card.id} tabindex="-1">{card.cardno}</a>
+                    </td>
+                    <td>
+                        <a href={"/card/" + card.id}>{card.name}</a>
+                    </td>
+                    <td>
+                        <a href={"/card/" + card.id} tabindex="-1">
+                            <abbr title={card.type}>{ cardTypes[card.type] }</abbr>
+                        </a>
+                    </td>
+                    <td>
+                        <a href={"/card/" + card.id} tabindex="-1">
+                            <abbr title={toPascal(card.color)}>{card.color.substring(0,1).toUpperCase()}</abbr>
+                        </a>
+                    </td>
+                    <td>
+                        <a href={"/card/" + card.id} tabindex="-1">
+                            <abbr title={`Level ${card.level}, Cost ${card.cost}`}>{card.level}/{card.cost}</abbr>
+                        </a>
+                    </td>
+                    <td>
+                        <a href={"/card/" + card.id} tabindex="-1">
+                            <abbr title={rarityConfig[card.rarity as keyof typeof rarityConfig].name ?? card.rarity}>{card.rarity}</abbr>
+                        </a>
+                    </td>
+                    <td>
+                        <a href={"/card/" + card.id} tabindex="-1">{card.setName}</a>
+                    </td>
+                </tr>
+            )}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .list-wrapper {
+        display: flex;
+        flex-flow: column nowrap;
+        margin: 0 auto;
+        max-width: 1000px;
+        overflow-x: scroll;
+        position: relative;
+        width: 100%;
+        overflow-scrolling: touch;
+    }
+
+    .card-list {
+        font-size: 14px;
+        width: 100%;
+        min-width: 768px;
+        max-width: 1000px;
+        line-height: 20px;
+        margin: 20px 0 20px 0;
+        table-layout: fixed;
+
+        & tr {
+            border-bottom: 1px solid #E0DEE3;
+            cursor: pointer;
+            border-left: 2px solid transparent;
+        }
+
+        & th {
+            padding: 5px 0 5px 6px;
+
+            & a {
+                color: #551A8B;
+            }
+        }
+
+        & th, th * {
+            text-align: left;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+    }
+</style>

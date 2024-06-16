@@ -3,6 +3,8 @@ import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@layouts/SearchHeader.astro";
 import CardImageTile from "@components/CardImageTile.astro";
 import CardDetailRow from "@components/CardDetailRow.astro";
+import CardGrid from "@components/CardGrid.astro";
+import type GridCardModel from "src/models/GridCardModel";
 
 import { db, Card, Set, eq } from 'astro:db';
 import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "@scripts/parser/queryParser";
@@ -60,6 +62,7 @@ if(singleToken?.type == "expression" && singleToken.keyword == "set") {
 //We can avoid this by specifying all the columns in the Select.
 
 //"any" type is necessary because SelectedFields type is not compatible.
+//TODO: Maybe get rid of displayconfig since we join set always and we can't use CardModel then?
 const currentDisplayConfig = displayConfig[displayFormat];
 const selectColumns = objectMap<string,any>(currentDisplayConfig.select, getColumnFromString);
 
@@ -89,13 +92,10 @@ if(results.length == 1) {
     <p>{results.length} results found.</p>
     <pre>{ stringifyLogicTree(tree, stringifySearchToken) }</pre>
     <pre>{ dbQuery.toSQL().sql }</pre>
-    <!-- TODO: Extract the surrounding markup into own component as well based on format. -->
-    {displayFormat == "image" && 
-        <ul>
-            { results.map( (card) => <li><CardImageTile card={card} /></li> ) }
-        </ul>
-    }
-    {displayFormat == "list" && 
+    <main>
+        <!-- TODO: Extract the surrounding markup into own component as well based on format. -->
+        {displayFormat == "image" && <CardGrid cards={results as GridCardModel[]} />}
+        {displayFormat == "list" && 
         <table>
             <thead>
                 <tr>
@@ -110,6 +110,8 @@ if(results.length == 1) {
             </thead>
             { results.map( (card) => <CardDetailRow card={card} /> ) }
         </table>
-    }
+        }
+    </main>
+    
     <!-- TODO: Show a default page if no cards were found. -->
 </MainLayout>
