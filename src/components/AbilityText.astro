@@ -1,0 +1,29 @@
+---
+/*TODO: Check "escape-html" library: if needed, and if astroserver one suffices */
+import scope from "astro:scope"
+import weissKeywords from "src/config/weiss-keywords.json";
+const text = await Astro.slots.render("default");
+const formattedText = text.replace(/【(CONT|AUTO|ACT)】/gi, `<span class='symbol' data-astro-cid-${scope}>$1</span>`)
+    .replace(new RegExp(`(${weissKeywords.join("|")})`,"g"), "<strong>$1</strong>")
+    .replace(/《([^》]+)》/g, (match, p1) => {
+        const query = encodeURIComponent(`trait:"${p1}"`);
+        return `《<a href="/search?q=${query}" title="Search for cards with ${match}" data-astro-cid-${scope}>${p1}</a>》`;
+    });
+console.log(formattedText);
+---
+<p>
+    <Fragment set:html={formattedText} />
+</p>
+
+<style>
+    /* CONT/AUTO/ACT symbols */
+    .symbol {
+        padding:2px;
+        border-radius: 4px;
+        color: white;
+        background-color: black;
+        font-family: "Arial Narrow", Helvetica, sans-serif;
+        font-size: .75em;
+        text-transform: uppercase;
+    }
+</style>

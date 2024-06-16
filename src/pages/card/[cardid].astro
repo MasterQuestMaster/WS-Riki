@@ -9,6 +9,7 @@ import { getTriggerInfo } from '@scripts/trigger';
 import { Icon } from 'astro-icon/components';
 import TraitBox from '@components/TraitBox.astro';
 import ColorIndicator from '@components/ColorIndicator.astro';
+import AbilityText from '@components/AbilityText.astro';
 
 const { cardid = "" } = Astro.params;
 console.log(cardid);
@@ -86,9 +87,7 @@ When formatting ability text, do the following:
                     </div>
                     <div class="abilities">
                     <!-- TODO: Replace text with symbols (html svg, or maybe a symbol font) -->
-                        { dbarray(card.abilities).map((abil) => 
-                            <p>{abil}</p>
-                        )}
+                        { dbarray(card.abilities).map((abil) => <AbilityText>{abil}</AbilityText> )}
                         <p><span class="symbol">AUTO</span> When your other character is placed on the stage by "Change", that character gets +1000 power until the end of the next turn. For each climax revealed among those cards, choose up to 1 《Berlint》 character in your waiting room, and return it to your hand.</p>
                     </div>
                     <div class="flavor">{card.flavor}</div>
@@ -232,17 +231,6 @@ When formatting ability text, do the following:
         font-size: 1.1em;
         background-color: #eee;
         border-radius: .3em;
-    }
-
-    /* CONT/AUTO/ACT symbols */
-    .symbol {
-        padding:2px;
-        border-radius: 4px;
-        color: white;
-        background-color: black;
-        font-family: "Arial Narrow", Helvetica, sans-serif;
-        font-size: .75em;
-        text-transform: uppercase;
     }
 
     .abilities {

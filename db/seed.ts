@@ -26,7 +26,7 @@ export default async function seed() {
 			trigger: null,
 			traits: ["Berlint", "Psychic Ability"],
 			abilities: [
-				"【AUTO】 When your other character is placed on the stage by \"Change\", that character gets +1000 power until the end of the next turn.",
+				"【AUTO】<div></div> When your other character is placed on the stage by \"Change\", that character gets +1000 power until the end of the next turn. 《Psychic Ability》",
 				"【ACT】 Brainstorm [(1) 【REST】 this card] Flip over 4 cards from the top of your deck, and put them into your waiting room. For each climax revealed among those cards, choose up to 1 《Berlint》 character in your waiting room, and return it to your hand."
 			],
 			icons: [
