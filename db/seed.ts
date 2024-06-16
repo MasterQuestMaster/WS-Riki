@@ -54,6 +54,7 @@ export default async function seed() {
 				"【AUTO】 When this card is placed on the stage from your hand, this card gets +X power until end of turn. X is equal to 500 multiplied by the number of 《Avatar》 or 《Net》 characters you have.",
 				"【AUTO】 [(1) Put a card from your hand into your waiting room] When this card attacks, if a card named \"《Mother's Rosario》\" is in your climax area, you may pay the cost. If you do, search your deck for up to two 《Avatar》 or 《Net》 characters, reveal them to your opponent, and put them into your hand. Then, shuffle your deck, and this card gets +1 level until the end of your opponent's next turn."
 			],
+			flavor: "You can use magic, or items, whatever you want. I'm only gonna use my sword, though.",
 			image: "https://en.ws-tcg.com/wp/wp-content/images/cardimages/s/sao_se26/SAO_SE26_E10.png"
 		},
 		{

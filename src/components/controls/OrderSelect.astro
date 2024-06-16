@@ -1,0 +1,24 @@
+---
+interface Props {
+    id: string,
+    value?: string
+}
+
+const {id, value="name", ...props} = Astro.props;
+
+/* TODO: set selected value somehow based on value prop. 
+Maybe make a list here in JS and then map over it like in DisplaySelect.
+*/
+
+---
+<label class="visually-hidden" for={id}>Order</label>
+<select name="order" {id} {...props}>
+    <option value="name">Sort by Name</option>
+    <option value="date">Sort by Release Date</option> <!-- release date of set -->
+    <option value="set">Sort by Set/Number</option> <!-- this requires adding the set-nr and the card-nr as separate columns --> 
+    <option value="rarity">Sort by Rarity</option> <!-- this requires defining what the order is -->
+    <option value="color">Sort by Color</option> <!-- color order like official sets -->
+    <option value="level">Sort by Level</option>
+    <option value="cost">Sort by Cost</option>
+    <option value="power">Sort by Power</option>
+</select>

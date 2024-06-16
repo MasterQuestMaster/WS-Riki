@@ -1,10 +1,10 @@
 ---
 import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@layouts/SearchHeader.astro";
-import CardImageTile from "@components/CardImageTile.astro";
-import CardDetailRow from "@components/CardDetailRow.astro";
 import CardGrid from "@components/CardGrid.astro";
+import CardList from "@components/CardList.astro";
 import type GridCardModel from "src/models/GridCardModel";
+import type ListCardModel from "src/models/ListCardModel";
 
 import { db, Card, Set, eq } from 'astro:db';
 import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "@scripts/parser/queryParser";
@@ -15,12 +15,15 @@ import { getColumnFromString } from "@scripts/db-utils";
 
 import parserConfig from "src/config/parser-config.json";
 import displayConfig from "src/config/display-config.json";
+import OrderSelect from "@components/controls/OrderSelect.astro";
+import DisplaySelect from "@components/controls/DisplaySelect.astro";
+
 
 
 const query = Astro.url.searchParams.get("q");
 
 //Perform a runtime check for the default value, since TS convert is only compile time.
-let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() as keyof typeof displayConfig ?? "";
+let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() ?? "";
 if(!Object.hasOwn(displayConfig, displayFormat)) {
     displayFormat = "image";
 }
@@ -63,7 +66,7 @@ if(singleToken?.type == "expression" && singleToken.keyword == "set") {
 
 //"any" type is necessary because SelectedFields type is not compatible.
 //TODO: Maybe get rid of displayconfig since we join set always and we can't use CardModel then?
-const currentDisplayConfig = displayConfig[displayFormat];
+const currentDisplayConfig = displayConfig[displayFormat as keyof typeof displayConfig];
 const selectColumns = objectMap<string,any>(currentDisplayConfig.select, getColumnFromString);
 
 //Always join Set unless we find out it impacts performance.
@@ -89,29 +92,100 @@ if(results.length == 1) {
 ---
 <MainLayout title={query}>
     <SearchHeader searchText={query} />
-    <p>{results.length} results found.</p>
     <pre>{ stringifyLogicTree(tree, stringifySearchToken) }</pre>
     <pre>{ dbQuery.toSQL().sql }</pre>
+    <nav class="search-controls">
+        <div class="inner-flex">
+            <div class="display-options">
+                <DisplaySelect id="as" value={displayFormat} />
+                <OrderSelect id="order" />
+
+                <label class="visually-hidden" for="direction">Direction</label> 
+                <select name="direction" id="direction">
+                    <option value="asc" selected>Asc</option> 
+                    <option value="desc">Desc</option>
+                </select>
+            </div>
+            <div class="pagination">
+                <span aria-hidden="true" class="button disabled icon-only">
+                    <!-- TODO: Add Icons here -->
+                    <b>|&lt;</b>
+                </span>
+                <span aria-hidden="true" class="button disabled">
+                    <b>&lt; Previous</b>
+                </span>
+                <a href="/search?as=image&amp;order=name&amp;page=2&amp;q=t%3Acreature&amp;unique=cards" class="button">
+                    <b>Next 60 &gt;</b>
+                </a>
+                <a href="/search?as=image&amp;order=name&amp;page=263&amp;q=t%3Acreature&amp;unique=cards" class="button icon-only">
+                    <b>&gt;|</b>
+                </a>
+            </div>
+        </div>
+    </nav>
     <main>
-        <!-- TODO: Extract the surrounding markup into own component as well based on format. -->
+        <div class="search-info">
+            <p>
+            <strong>1 – X of {results.length} cards</strong>
+            <span class="search-summary">where the card types include “creature”</span>
+            </p>
+        </div>
+        <!-- Display the correct markup depending on the display format. -->
         {displayFormat == "image" && <CardGrid cards={results as GridCardModel[]} />}
-        {displayFormat == "list" && 
-        <table>
-            <thead>
-                <tr>
-                    <th>Card No.</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Color</th>
-                    <th>LV/C</th>
-                    <th>Rarity</th>
-                    <th>Set</th>
-                </tr>
-            </thead>
-            { results.map( (card) => <CardDetailRow card={card} /> ) }
-        </table>
-        }
+        {displayFormat == "list" && <CardList cards={results as ListCardModel[]} />}
     </main>
     
     <!-- TODO: Show a default page if no cards were found. -->
 </MainLayout>
+
+<style>
+    .search-controls {
+        padding: 12px 2.5%;
+        background-color: #F6F4FA;
+        background-color: #F3F5F8;
+        border-bottom: 1px solid rgba(99,68,150,0.1);
+    }
+
+    .search-controls .inner-flex {
+        flex-flow: row nowrap;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .display-options, .pagination {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .search-info {
+        background-color: #F6F4FA;
+        padding: 8px 2.5%;
+        font-size: 12px;
+        color: #535353;
+        border-bottom: 1px solid rgba(99,68,150,0.1);
+        text-align: center;
+        display: block;
+
+        & p {
+            display: block;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        & strong {
+            color: #000;
+            font-weight: 500;
+        }
+    }
+
+    @media screen and (min-width: 760px) {
+        .search-info {
+            padding: 10px 2.5%;
+            font-size: 14px;
+            text-align: left;
+        }
+    }
+</style>

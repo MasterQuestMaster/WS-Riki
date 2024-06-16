@@ -86,30 +86,38 @@ When formatting ability text, do the following:
                         <span class="card-type">{card.type}</span>
                     </div>
                     <div class="abilities">
-                    <!-- TODO: Replace text with symbols (html svg, or maybe a symbol font) -->
                         { dbarray(card.abilities).map((abil) => <AbilityText>{abil}</AbilityText> )}
-                        <p><span class="symbol">AUTO</span> When your other character is placed on the stage by "Change", that character gets +1000 power until the end of the next turn. For each climax revealed among those cards, choose up to 1 《Berlint》 character in your waiting room, and return it to your hand.</p>
                     </div>
-                    <div class="flavor">{card.flavor}</div>
+                    { card.flavor && 
+                        <div class="flavor">
+                            <p aria-label="Flavor Text">{card.flavor}</p>
+                        </div>
+                    }
 
                     <footer class="card-footer">
                         <div class="card-stats">
                             <!-- TODO: Use sword icon on the left and display the power. Also use a hexagon and display the amount of soul inside of it.
                                 Maybe we can even use the blank trigger template as background image for a number. 
                             -->
-                            <div title={`Level ${card.level}, Cost ${card.cost}`}>
-                                <!-- Maybe the icon should be a blank version of the "Level" circle on WS cards? Or a simplified version. -->
-                                <Icon class="stat-icon" name="winged-shield" />
-                                <span class="stat-number" aria-label="Level/Cost">{card.level}/{card.cost}</span>
-                            </div>
-                            <div title={card.power + " Power"}>
-                                <Icon class="stat-icon" name="sword" /> 
-                                <span class="stat-number" aria-label="Power" >{card.power}</span>
-                            </div>
-                            <div title={card.soul + " Soul"}>
-                                <img class="stat-icon" src={soulTrigger.image} alt={soulTrigger.name} />
-                                <span class="stat-number" aria-label="Soul">{card.soul}</span>
-                            </div>
+                            { card.level !== null && card.cost !== null &&
+                                <div title={`Level ${card.level}, Cost ${card.cost}`}>
+                                    <!-- Maybe the icon should be a blank version of the "Level" circle on WS cards? Or a simplified version. -->
+                                    <img class="stat-icon" src="/images/level.webp" alt="level" />
+                                    <span class="stat-number" aria-label="Level/Cost">{card.level}/{card.cost}</span>
+                                </div> 
+                            }
+                            { card.power !== null &&
+                                <div title={card.power + " Power"}>
+                                    <Icon class="stat-icon" name="sword" /> 
+                                    <span class="stat-number" aria-label="Power" >{card.power}</span> 
+                                </div>
+                            }
+                            { card.soul !== null &&
+                                <div title={card.soul + " Soul"}>
+                                    <img class="stat-icon" src={soulTrigger.image} alt={soulTrigger.name} />
+                                    <span class="stat-number" aria-label="Soul">{card.soul}</span>
+                                </div>
+                            }
                         </div>
                         <div class="card-traits">
                             { dbarray(card.traits).map((trait) => <TraitBox>{trait}</TraitBox>) }
@@ -235,17 +243,18 @@ When formatting ability text, do the following:
 
     .abilities {
         padding: 0 12px;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
     }
 
     .flavor {
+        padding: 5px 12px;
         color:#585858;
         font-style: italic;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
     }
 
     .card-footer {
         padding: 5px 12px 0 12px;
-        border-top: 1px solid rgba(0,0,0,0.1);
-
         display: flex;
         flex-flow: row wrap;
         align-items: center;
@@ -318,6 +327,10 @@ When formatting ability text, do the following:
         .card-image {
             margin: 0;
             flex: 0 0 336px;
+        }
+
+        .card-image.rotated .card:hover {
+            transform: rotate(-90deg) scale(1) translateY(50px);
         }
 
         .card-actions {

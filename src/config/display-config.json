@@ -1,5 +1,6 @@
 {
     "image": {
+        "label": "Display as Images",
         "join": [],
         "select": {
             "id": "Card.id",
@@ -9,6 +10,7 @@
         }
     },
     "list": {
+        "label": "Display as List",
         "join": ["Set"],
         "select": {
             "id": "Card.id",

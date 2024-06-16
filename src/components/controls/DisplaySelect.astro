@@ -1,0 +1,19 @@
+---
+import displayConfig from "src/config/display-config.json";
+
+interface Props {
+    id: string,
+    value?: string
+}
+
+const {id, value="image", ...props} = Astro.props;
+
+---
+<label class="visually-hidden" for={id}>Display</label>
+<select name="as" {id} {...props}>
+    {Object.entries(displayConfig).map(([key, configVal]) =>
+        (key==value) ? 
+            <option value={key} selected>{configVal.label}</option> :
+            <option value={key}>{configVal.label}</option>
+    )}
+</select>

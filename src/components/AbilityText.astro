@@ -1,15 +1,47 @@
 ---
-/*TODO: Check "escape-html" library: if needed, and if astroserver one suffices */
+/* TODO: SAO cards have the trait symbols in names. We must ignore them when adding trait links. */
+/*
+Parse ability text:
+Quoted text can be either: Card name, Keyword (for 'when you use "Change"'), an entire sub-ability, or an "action" (an ability without an ability type)
+In names, we should ignore keywords, ability types and traits.
+In keyword quoted text, we should find the keyword.
+In sub-abilities, we need to consider ability types, traits and keywords.
+
+Keyword quoted text is just keywords optionally surrounded by quotes.
+Sub-Abilities start with an ability type (cont|auto|act).
+Actions are preceeded by "perform the following action (?) times".
+
+It's hard to recognize what's a card name. For now, we should just ignore the bug that traits and other stuff in card names is highlighted.
+Later, when we have related cards, we can check if any quoted string is the name of a related card, and if so, link to that.
+If we do this, we definitely need 1 big regex so we don't have the problem of finding traits in the name after linking the name.
+
+Potentially we can use another parser/tokenizer for this, but it will be complicated due to multiple meanings.
+
+*/
+
 import scope from "astro:scope"
 import weissKeywords from "src/config/weiss-keywords.json";
 const text = await Astro.slots.render("default");
+console.log(text);
 const formattedText = text.replace(/【(CONT|AUTO|ACT)】/gi, `<span class='symbol' data-astro-cid-${scope}>$1</span>`)
+    //find keywords from config and make them bold.
     .replace(new RegExp(`(${weissKeywords.join("|")})`,"g"), "<strong>$1</strong>")
+    //add 《traits》 links but only for those followed by an even number of "quotes" (-> not in quotes).
+    //https://regex101.com/r/XFB65G/2
+    //We have &quot instead of quotes so we can't use this regex.
     .replace(/《([^》]+)》/g, (match, p1) => {
         const query = encodeURIComponent(`trait:"${p1}"`);
         return `《<a href="/search?q=${query}" title="Search for cards with ${match}" data-astro-cid-${scope}>${p1}</a>》`;
     });
-console.log(formattedText);
+
+// const abilRegex = new RegExp(`(&quot;.*?&quot;)|《([^》]+)》|【(CONT|AUTO|ACT)】|(${weissKeywords.join("|")})`, "g");
+// const formattedText2 = text.replace(abilRegex, function(match,quote,trait,abil,keyword) {
+//     console.log(quote,trait,abil,keyword);
+//     if(quote )
+
+//     return match;
+// });
+    
 ---
 <p>
     <Fragment set:html={formattedText} />
@@ -25,5 +57,9 @@ console.log(formattedText);
         font-family: "Arial Narrow", Helvetica, sans-serif;
         font-size: .75em;
         text-transform: uppercase;
+    }
+
+    p {
+        margin: .5em 0; /* left/right margin. */
     }
 </style>
