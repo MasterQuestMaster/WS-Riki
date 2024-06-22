@@ -1,0 +1,39 @@
+---
+import OrderSelect from "@components/controls/OrderSelect.astro";
+import DisplaySelect from "@components/controls/DisplaySelect.astro";
+import DirectionSelect from "@components/controls/DirectionSelect.astro";
+
+interface Props {
+    displayFormat: string;
+    order: string;
+    dir: string;
+}
+
+const {displayFormat, order, dir} = Astro.props;
+
+---
+<div class="flex-row-start" data-display-options>
+    <DisplaySelect name="as" value={displayFormat} />
+    <OrderSelect name="order" value={order} />
+    <DirectionSelect name="dir" value={dir} />
+</div>
+
+<script>
+    //Scripts is only executed once, even if the component is included multiple times, so add once for all instances.
+    document.querySelectorAll("[data-display-options]").forEach((container) => {
+        const displaySelect = container.querySelector("[name=as]");
+        displaySelect?.addEventListener("change", changeUrlParams);
+
+        const orderSelect = container.querySelector("[name=order]");
+        orderSelect?.addEventListener("change", changeUrlParams);
+
+        const directionSelect = container.querySelector("[name=dir]");
+        directionSelect?.addEventListener("change", changeUrlParams);
+    });
+
+    function changeUrlParams(this:HTMLSelectElement) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set(this.name, this.value);
+        window.location.search = urlParams.toString();
+    }
+</script>

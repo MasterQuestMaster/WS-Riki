@@ -9,7 +9,7 @@ const { label, _for = "", sticky=false } = Astro.props;
 const formattedLabel = label ? label + ":" : ""; //Append ":" if not empty.
 ---
 <div class:list={["form-row", {sticky: sticky}]}>
-    <label for={_for}>{formattedLabel}</label>
+    <label class="flex-row-start" for={_for}>{formattedLabel}</label>
     <div class="content">
         <slot />
     </div>
@@ -37,10 +37,6 @@ const formattedLabel = label ? label + ":" : ""; //Append ":" if not empty.
         line-height: 20px;
         padding: 0 8px 0 0;
         border: 1px solid transparent;
-        display: flex;
-        flex-flow: row nowrap;
-        justify-content: flex-start;
-        align-items: center;
         margin-bottom: 5px;
 
         & svg {

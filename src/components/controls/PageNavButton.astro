@@ -1,0 +1,48 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+    url: string|URL,
+    page: number,
+    iconName: string,
+    iconPos?: "left"|"right"
+    label?: string,
+    isActive?: boolean
+}
+
+const {url, page, iconName, iconPos="left", label = "", isActive=true} = Astro.props;
+
+const buttonClasses = ["button", {"disabled": !isActive}, {"icon-only":(label == "")}];
+const pageUrl = new URL(url);
+pageUrl.searchParams.set("page", page.toString());
+---
+
+{isActive ?
+    <a href={pageUrl} class:list={buttonClasses}>
+        {iconPos=="left" && <Icon name={iconName} />}
+        {label && <label>{label}</label>}
+        {iconPos=="right" && <Icon name={iconName} />}
+    </a>
+    :
+    <span aria-hidden="true" class:list={buttonClasses}>
+        {iconPos=="left" && <Icon name={iconName} />}
+        {label && <label>{label}</label>}
+        {iconPos=="right" && <Icon name={iconName} />}
+    </span>
+}
+
+<style>
+    [data-icon] {
+        font-size: 1.5em;
+        margin-left: -5px;
+    }
+
+    .icon-only [data-icon] {
+        margin: 0 -5px 0 -5px !important;
+    }
+
+    label {
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>

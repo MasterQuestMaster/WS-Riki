@@ -1,0 +1,19 @@
+---
+import PageNavButton from "@components/PageNavButton.astro";
+
+interface Props {
+    url: string|URL,
+    page: number,
+    lastPage: number,
+    pageSize: number
+}
+
+const {url, page, lastPage, pageSize} = Astro.props;
+
+---
+<div class="flex-row-start">
+    <PageNavButton {url} page={1} iconName="pagination/first-page" isActive={page > 1} />
+    <PageNavButton {url} page={page - 1} iconName="pagination/navigate-before" iconPos="left" label="Previous" isActive={page > 1} />
+    <PageNavButton {url} page={page + 1} iconName="pagination/navigate-next" iconPos="right" label={`Next ${pageSize}`} isActive={page < lastPage} />
+    <PageNavButton {url} page={lastPage} iconName="pagination/last-page" isActive={page < lastPage} />
+</div>

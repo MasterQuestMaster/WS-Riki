@@ -1,8 +1,10 @@
 ---
 import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@layouts/SearchHeader.astro";
-import CardGrid from "@components/CardGrid.astro";
-import CardList from "@components/CardList.astro";
+import CardGrid from "@layouts/display-modes/CardGrid.astro";
+import CardList from "@layouts/display-modes/CardList.astro";
+import SearchControls from "@components/SearchControls.astro";
+
 import type GridCardModel from "src/models/GridCardModel";
 import type ListCardModel from "src/models/ListCardModel";
 
@@ -15,12 +17,14 @@ import { getColumnFromString } from "@scripts/db-utils";
 
 import parserConfig from "src/config/parser-config.json";
 import displayConfig from "src/config/display-config.json";
-import OrderSelect from "@components/controls/OrderSelect.astro";
-import DisplaySelect from "@components/controls/DisplaySelect.astro";
-
 
 
 const query = Astro.url.searchParams.get("q");
+const order = Astro.url.searchParams.get("order") ?? "set";
+const dir = Astro.url.searchParams.get("dir") ?? "asc";
+const page = parseInt(Astro.url.searchParams.get("page") ?? "1");
+const pageSize = parseInt(Astro.url.searchParams.get("count") ?? "60");
+const lastPage = 2; //TODO: get this from DB query somehow.
 
 //Perform a runtime check for the default value, since TS convert is only compile time.
 let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() ?? "";
@@ -94,35 +98,7 @@ if(results.length == 1) {
     <SearchHeader searchText={query} />
     <pre>{ stringifyLogicTree(tree, stringifySearchToken) }</pre>
     <pre>{ dbQuery.toSQL().sql }</pre>
-    <nav class="search-controls">
-        <div class="inner-flex">
-            <div class="display-options">
-                <DisplaySelect id="as" value={displayFormat} />
-                <OrderSelect id="order" />
-
-                <label class="visually-hidden" for="direction">Direction</label> 
-                <select name="direction" id="direction">
-                    <option value="asc" selected>Asc</option> 
-                    <option value="desc">Desc</option>
-                </select>
-            </div>
-            <div class="pagination">
-                <span aria-hidden="true" class="button disabled icon-only">
-                    <!-- TODO: Add Icons here -->
-                    <b>|&lt;</b>
-                </span>
-                <span aria-hidden="true" class="button disabled">
-                    <b>&lt; Previous</b>
-                </span>
-                <a href="/search?as=image&amp;order=name&amp;page=2&amp;q=t%3Acreature&amp;unique=cards" class="button">
-                    <b>Next 60 &gt;</b>
-                </a>
-                <a href="/search?as=image&amp;order=name&amp;page=263&amp;q=t%3Acreature&amp;unique=cards" class="button icon-only">
-                    <b>&gt;|</b>
-                </a>
-            </div>
-        </div>
-    </nav>
+    <SearchControls {displayFormat} {order} {dir} {page} {lastPage} {pageSize} />
     <main>
         <div class="search-info">
             <p>
@@ -134,30 +110,10 @@ if(results.length == 1) {
         {displayFormat == "image" && <CardGrid cards={results as GridCardModel[]} />}
         {displayFormat == "list" && <CardList cards={results as ListCardModel[]} />}
     </main>
-    
-    <!-- TODO: Show a default page if no cards were found. -->
+    <SearchControls {displayFormat} {order} {dir} {page} {lastPage} {pageSize} />
 </MainLayout>
 
 <style>
-    .search-controls {
-        padding: 12px 2.5%;
-        background-color: #F6F4FA;
-        background-color: #F3F5F8;
-        border-bottom: 1px solid rgba(99,68,150,0.1);
-    }
-
-    .search-controls .inner-flex {
-        flex-flow: row nowrap;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .display-options, .pagination {
-        display: flex;
-        flex-flow: row nowrap;
-        justify-content: flex-start;
-        align-items: center;
-    }
 
     .search-info {
         background-color: #F6F4FA;

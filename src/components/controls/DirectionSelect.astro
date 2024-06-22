@@ -1,0 +1,16 @@
+---
+interface Props {
+    name: string,
+    value?: string,
+}
+
+const {name, value="name", ...props} = Astro.props;
+
+---
+<label>
+    <select {name} {...props}>
+        <option value="asc" selected={value == "asc"}>Asc</option> 
+        <option value="desc" selected={value == "desc"}>Desc</option>
+    </select>
+    <span class="visually-hidden">Direction</span>
+</label> 

@@ -5,33 +5,33 @@ import { Icon } from "astro-icon/components"
 const { searchText } = Astro.props;
 ---
 <header id="search-header">
-    <div class="header-content">
-        <a title="Back to homepage" href="/" class="header-logo">
+    <div class="header-content flex-row-start">
+        <a title="Back to homepage" href="/" class="header-logo flex-row-start">
             <span class="visually-hidden">Riki</span>
             <Icon name="riki_icon" />
         </a>
-        <form action="/search" accept-charset="UTF-8" method="get" class="header-search-form">
+        <form action="/search" accept-charset="UTF-8" method="get" class="header-search-form flex-row-start">
             <label for="header-search-field" class="visually-hidden">Search for Weiß Schwarz cards</label> 
             <input type="text" name="q" id="header-search-field" value={searchText} placeholder="Search for Weiß Schwarz cards…" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" class="header-search-field"> 
             
             <!-- Hidden inputs for additional search options -->
-            <input type="hidden" name="as" id="as" value="grid" autocomplete="off"> 
-            <input type="hidden" name="order" id="order" value="name" autocomplete="off">
+            <input type="hidden" name="as" value="grid" autocomplete="off"> 
+            <input type="hidden" name="order" value="name" autocomplete="off">
     
             <button type="submit" class="visually-hidden">Find Cards</button>
         </form>
     
         <div class="header-links">
             <div class="divider"></div> 
-            <a href="/advanced">
+            <a class="flex-row-start" href="/advanced">
                 <Icon name="table" />
                 <span>Advanced</span>
             </a> 
-            <a href="/docs/syntax">
+            <a class="flex-row-start" href="/docs/syntax">
                 <Icon name="help" />
                 <span>Syntax</span>
             </a> 
-            <a href="/sets">
+            <a class="flex-row-start" href="/sets">
                 <Icon name="crown" /> <!-- can use width/height/color freely -->
                 <span>Sets</span>
             </a>
@@ -50,25 +50,17 @@ const { searchText } = Astro.props;
 
     .header-content  {
         margin: 0 auto;
+        /*position: relative;*/
         width: 100%;
-        overflow: hidden;
         max-width: 1000px;
-        position: relative;
-        display: flex;
-        flex-flow: row nowrap;
-        align-items: center;
-        justify-content: flex-start;
         height: 52px;
+        overflow: hidden;
     }
 
     .header-search-form {
-        display: flex;
-        flex-flow: row nowrap;
-        justify-content: flex-start;
-        align-items: center;
-        position: relative;
-        flex: 1 1;
         margin: 0 0 0 4px;
+        /*position: relative;*/
+        flex: 1 1;
     }
 
     #header-search-field {
@@ -85,9 +77,6 @@ const { searchText } = Astro.props;
     .header-logo {
         flex: 0 0 28px;
         height: 52px;
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
 
         & svg {
             height: 34px;
@@ -99,18 +88,7 @@ const { searchText } = Astro.props;
         display: none; /* do not display at lower resolutions */
     }
 
-    .divider {
-        height: 20px;
-        width: 1px;
-        border-right: 1px solid rgba(255,255,255,0.4);
-        margin: 0 6px 0 0;
-    }
-
     .header-links a {
-        display: flex;
-        flex-flow: row nowrap;
-        justify-content: flex-start;
-        align-items: center;
         height: 52px;
         font-size: 14px;
         line-height: 22px;
@@ -131,6 +109,13 @@ const { searchText } = Astro.props;
             height: 16px;
             margin: 0 7px 0 0;
         }
+    }
+
+    .divider {
+        height: 20px;
+        width: 1px;
+        border-right: 1px solid rgba(255,255,255,0.4);
+        margin: 0 6px 0 0;
     }
 
     @media screen and (min-width: 420px) {

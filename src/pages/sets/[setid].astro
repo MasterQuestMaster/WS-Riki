@@ -1,13 +1,22 @@
 ---
 import MainLayout from '@layouts/MainLayout.astro';
 import SearchHeader from '@layouts/SearchHeader.astro';
-import CardImageTile from '@components/CardImageTile.astro';
+import SearchControls from '@components/SearchControls.astro';
+import CardGrid from "@layouts/display-modes/CardGrid.astro";
+import CardList from "@layouts/display-modes/CardList.astro";
+
+import type GridCardModel from "src/models/GridCardModel";
+import type ListCardModel from "src/models/ListCardModel";
 
 import { db, eq, Card, Set } from 'astro:db';
 
 import displayConfig from "src/config/display-config.json";
-import { objectMap, objectFilter } from 'src/scripts/utils';
+import { objectMap, objectFilter, formatDate } from 'src/scripts/utils';
 import { getColumnFromString } from 'src/scripts/db-utils';
+import DisplayOptions from '@components/DisplayOptions.astro';
+
+const order = Astro.url.searchParams.get("order") ?? "set";
+const dir = Astro.url.searchParams.get("dir") ?? "asc";
 
 //Display Format: Perform a runtime check for the default value, since TS convert is only compile time.
 let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() as keyof typeof displayConfig ?? "";
@@ -26,20 +35,32 @@ if(!set) {
     });
 }
 
-//filter "Set" columns because we already have them.
 const currentDisplayConfig = displayConfig[displayFormat];
-const filteredColumns = objectFilter(currentDisplayConfig.select, (val) => !val.startsWith("Set"));
-const selectColumns = objectMap<string,any>(filteredColumns, getColumnFromString) //as any;
-
+const selectColumns = objectMap<string,any>(currentDisplayConfig.select, getColumnFromString)
 const cards = await db.select(selectColumns).from(Card).where(eq(Card.setId, set.id));
 
 ---
 <MainLayout title={set.name}>
     <SearchHeader searchText={"set:" + set.id} />
+    <div class="set-header">
+        <div class="inner-flex">
+          <div class="set-header-title">
+              <h1>{set.name}</h1>        
+              <p>
+                {cards.length}&nbsp;cards &mdash;
+                Released&nbsp;{set.releaseDate ? formatDate(set.releaseDate) : "-"}
+              </p>
+          </div>
+
+          <DisplayOptions {displayFormat} {order} {dir} />
+      
+        </div>
+      </div>
     <main>
         {() => {
             if(cards?.length) {
-                return cards.map(card => <CardImageTile card={card} />);
+                if(displayFormat == "image") return <CardGrid cards={cards as GridCardModel[]} />;
+                if(displayFormat == "list") return <CardList cards={cards as ListCardModel[]} />;
             }
             else {
                 return <div class="no-items">This set has no cards.</div>;
@@ -47,3 +68,42 @@ const cards = await db.select(selectColumns).from(Card).where(eq(Card.setId, set
         }}
     </main>
 </MainLayout>
+
+<style>
+    .set-header {
+        background-color: #acc188;
+        padding: 4px 2% 4px 2%;
+    }
+
+    .set-header .inner-flex {
+        flex-flow: row wrap;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .set-header-title h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .set-header-title p {
+        margin: 2px 0 0 0;
+        font-size: 13px;
+        color:#333;
+    }
+
+    @media screen and (min-width: 800px) {
+        .set-header-controls {
+            display: flex;
+            flex-flow: row wrap;
+            align-items: center;
+            justify-content: center;
+            margin: 6px 0 6px 0;
+        }
+    }
+
+    .no-items {
+        
+    }
+</style>
