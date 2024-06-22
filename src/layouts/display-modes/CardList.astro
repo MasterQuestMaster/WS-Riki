@@ -1,5 +1,5 @@
 ---
-import ColorIndicator from './ColorIndicator.astro';
+import ColorIndicator from '@components/ColorIndicator.astro';
 import type ListCardModel from 'src/models/ListCardModel';
 import { toPascal } from '@scripts/utils';
 
@@ -33,9 +33,11 @@ const cardTypes: Record<string,string> = {
             </tr>
         </thead>
         <tbody>
-            <!-- <a href={"/card/" + card.id} tabindex="-1"> -->
+            <!-- TODO make this thing keyboard accessible with tabbing. -->
             {cards.map((card) => 
-                <tr data-card-image={card.image}>
+                <tr data-card-image={card.image} 
+                    data-card-type={card.type}
+                    data-card-id={card.id}>
                     <td>
                         <a href={"/card/" + card.id} tabindex="-1">{card.cardno}</a>
                     </td>
@@ -70,6 +72,51 @@ const cardTypes: Record<string,string> = {
         </tbody>
     </table>
 </div>
+<div id="card-preview-container" aria-hidden="true"></div>
+
+<script>
+
+    const previewContainer = document.getElementById("card-preview-container");
+    const cardRows = document.querySelectorAll("[data-card-image]");
+    cardRows.forEach((el) => {
+        const tr = el as HTMLTableRowElement;
+        const cardImage = tr.dataset.cardImage ?? "";
+        const cardType = tr.dataset.cardType ?? "";
+        const cardId = tr.dataset.cardId ?? ""; //needed to check if the card is a different. But can we check for the image being the same instead?
+        tr.addEventListener("mousemove", (e) => updatePreviewPosition(e, cardId, cardImage, (cardType == "Climax")));
+        tr.addEventListener("mouseout", hidePreview);
+    });
+    
+    function updatePreviewPosition(e:MouseEvent, cardId: string, cardImage: string, isRotated: boolean) {
+        if (window.innerWidth < 768 || !previewContainer)
+            return false;
+    
+        if(previewContainer.style.display != "flex") {
+            previewContainer.style.display = "flex";
+        }
+        
+        previewContainer.style.left = e.pageX + 50 + "px";
+        previewContainer.style.top = e.pageY - 30 + "px";
+    
+        if(cardId !== previewContainer.dataset.cardId) {
+            var previewImage = document.createElement("img");
+            previewImage.src = cardImage;
+            previewImage.alt = cardId;
+
+            previewContainer.dataset.cardId = cardId;
+            previewContainer.replaceChildren(previewImage);
+            previewContainer.classList.toggle("rotated", isRotated);
+        }
+    
+    }
+    
+    function hidePreview() {
+        if(previewContainer) {
+            previewContainer.style.display = "none";
+        }
+    }
+    
+</script>
 
 <style>
     .list-wrapper {
@@ -98,9 +145,17 @@ const cardTypes: Record<string,string> = {
         border-bottom: 1px solid #E0DEE3;
         cursor: pointer;
         border-left: 2px solid transparent;
+    }
+
+    tbody tr:hover {
+        background-color: #eee;
+    }
+
+    tr:nth-child(even) {
+        background-color: rgba(0,0,0,0.05);
 
         &:hover {
-            background-color: #eee;
+            background-color: rgba(101,82,0,0.075);
         }
     }
 
@@ -119,7 +174,8 @@ const cardTypes: Record<string,string> = {
 
     /* cells */
     td {
-        overflow: hidden;
+        padding: 5px;
+        overflow: hidden; /* prevent big links from spilling */
     }
 
     .center {
@@ -131,5 +187,31 @@ const cardTypes: Record<string,string> = {
         display: block;
         margin: -10em;
         padding: 10em;
+
+        color: #16161D;
+        outline: none;
+    }
+
+    /* preview */
+    #card-preview-container {
+        display: none;
+        pointer-events: none;
+        position: absolute;
+        z-index: 100000;
+        background-image: repeating-linear-gradient(-55deg, #DDD, #DDD 5px, #CCC 5px, #CCC 10px);
+        border-radius: 4.75% / 3.5%;
+        height: 340px;
+        width: 244px;
+        flex-flow: row nowrap;
+
+        &.rotated {
+            transform: rotate(-90deg);
+        }
+    }
+
+    #card-preview-container img {
+        max-width: 244px;
+        max-height: 340px;
+        background-image: none;
     }
 </style>
