@@ -32,20 +32,20 @@ const set = selectCardResult.Set;
 const soulTrigger = getTriggerInfo(["soul"])[0];
 
 ---
-<!-- CX imagages are upright by default, by the same image with (H) appended from ws-tcg is horizontal.
+{/* CX imagages are upright by default, by the same image with (H) appended from ws-tcg is horizontal.
 
 When formatting ability text, do the following:
 - make traits have a link to a search that searches for all characters with that trait.
 - Make keywords (Alarm, Brainstorm, Great Performance...) bold.
 - Format cont/auto/act as boxes
 
--->
+*/}
 <MainLayout>
     <SearchHeader />
     <main>
         <div class="card-details">
             <div class="inner-flex">
-                <!-- climax are rotated by default -->
+                {/* climax are rotated by default */}
                 <figure id="main-image-container" class:list={["card-image", {rotated: (card.type == "Climax")}]}>
                     <img class="card" src={card.image} alt={card.name} loading="eager" />
                 </figure>
@@ -59,7 +59,7 @@ When formatting ability text, do the following:
                     }
                 </div>
 
-                <!-- Card Text -->
+                {/* Card Text */}
                 <article class:list={["card-text", card.color.toLowerCase()]}>
                     <header class="card-header">
                         <h1 class="card-name">{card.name}</h1>
@@ -96,12 +96,9 @@ When formatting ability text, do the following:
 
                     <footer class="card-footer">
                         <div class="card-stats">
-                            <!-- TODO: Use sword icon on the left and display the power. Also use a hexagon and display the amount of soul inside of it.
-                                Maybe we can even use the blank trigger template as background image for a number. 
-                            -->
                             { card.level !== null && card.cost !== null &&
                                 <div title={`Level ${card.level}, Cost ${card.cost}`}>
-                                    <!-- Maybe the icon should be a blank version of the "Level" circle on WS cards? Or a simplified version. -->
+                                    {/* Maybe the icon should be a blank version of the "Level" circle on WS cards? Or a simplified version. */}
                                     <img class="stat-icon" src="/images/level.webp" alt="level" />
                                     <span class="stat-number" aria-label="Level/Cost">{card.level}/{card.cost}</span>
                                 </div> 

@@ -1,15 +1,41 @@
 ---
 import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@layouts/SearchHeader.astro";
+import SearchControls from "@components/search/SearchControls.astro";
+import DisplayOptions from "@components/search/DisplayOptions.astro";
 
 import { db, Set } from 'astro:db';
 import { format } from 'date-fns';
+
+import displayConfig from "src/config/display-config.json";
+
+//URL parameters
+const order = Astro.url.searchParams.get("order") ?? "set";
+const dir = Astro.url.searchParams.get("dir") ?? "asc";
+
+//Perform a runtime check for the default value, since TS convert is only compile time.
+let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() ?? "";
+if(!Object.hasOwn(displayConfig, displayFormat)) {
+    displayFormat = "image";
+}
 
 const sets = await db.select().from(Set);
 
 ---
 <MainLayout>
     <SearchHeader />
+
+    <SearchControls>
+        <DisplayOptions {displayFormat} {order} {dir} />
+    </SearchControls>
+
+    {/* TODO: Set overview has its own header with different controls.
+    We want to reuse the structure with search-controls and inner-flex,
+    but decide ourselves what controls are inside.
+    Maybe with slots? But problem is that we also want to keep duplicated code low
+    for using the control twice. Maybe have 1 SearchControl for Set and 1 for Cards?
+    With a component to represent the wrapper? 
+    */}
     <main>
         <table>
             <thead>

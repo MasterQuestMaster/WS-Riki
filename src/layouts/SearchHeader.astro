@@ -14,7 +14,7 @@ const { searchText } = Astro.props;
             <label for="header-search-field" class="visually-hidden">Search for Weiß Schwarz cards</label> 
             <input type="text" name="q" id="header-search-field" value={searchText} placeholder="Search for Weiß Schwarz cards…" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="1024" class="header-search-field"> 
             
-            <!-- Hidden inputs for additional search options -->
+            {/* Hidden inputs for additional search options */}
             <input type="hidden" name="as" value="grid" autocomplete="off"> 
             <input type="hidden" name="order" value="name" autocomplete="off">
     
@@ -32,7 +32,7 @@ const { searchText } = Astro.props;
                 <span>Syntax</span>
             </a> 
             <a class="flex-row-start" href="/sets">
-                <Icon name="crown" /> <!-- can use width/height/color freely -->
+                <Icon name="crown" /> {/* can use width/height/color freely */}
                 <span>Sets</span>
             </a>
         </div>
