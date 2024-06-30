@@ -1,0 +1,23 @@
+---
+
+---
+<nav class="search-controls">
+    <div class="inner-flex">
+        <slot />
+    </div>
+</nav>
+
+<style>
+    .search-controls {
+        padding: 12px 2.5%;
+        background-color: #F6F4FA;
+        background-color: #F3F5F8;
+        border-bottom: 1px solid rgba(99,68,150,0.1);
+    }
+
+    .search-controls .inner-flex {
+        flex-flow: row nowrap;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
