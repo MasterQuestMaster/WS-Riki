@@ -3,7 +3,9 @@ import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@layouts/SearchHeader.astro";
 import CardGrid from "@layouts/display-modes/CardGrid.astro";
 import CardList from "@layouts/display-modes/CardList.astro";
-import SearchControls from "@components/SearchControls.astro";
+import SearchControls from "@components/search/SearchControls.astro";
+import DisplayOptions from "@components/search/DisplayOptions.astro";
+import PaginationOptions from "@components/search/PaginationOptions.astro";
 
 import type GridCardModel from "src/models/GridCardModel";
 import type ListCardModel from "src/models/ListCardModel";
@@ -13,12 +15,12 @@ import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "@scrip
 import { DrizzleParser, type IKeywordOptions as DrizzleKeywordOptions } from "@scripts/parser/drizzleParser";
 import { stringifyLogicTree, getSingleToken } from "@scripts/parser/logicGroup";
 import { stringifySearchToken, objectMap } from "@scripts/utils";
-import { getColumnFromString } from "@scripts/db-utils";
+import { selectCardSetCols } from "@scripts/db-utils";
 
 import parserConfig from "src/config/parser-config.json";
 import displayConfig from "src/config/display-config.json";
 
-
+//URL Parameters
 const query = Astro.url.searchParams.get("q");
 const order = Astro.url.searchParams.get("order") ?? "set";
 const dir = Astro.url.searchParams.get("dir") ?? "asc";
@@ -68,24 +70,17 @@ if(singleToken?.type == "expression" && singleToken.keyword == "set") {
 //It becomes {Card:{id,name,...},Set:{id,name,...}}.
 //We can avoid this by specifying all the columns in the Select.
 
-//"any" type is necessary because SelectedFields type is not compatible.
-//TODO: Maybe get rid of displayconfig since we join set always and we can't use CardModel then?
-const currentDisplayConfig = displayConfig[displayFormat as keyof typeof displayConfig];
-const selectColumns = objectMap<string,any>(currentDisplayConfig.select, getColumnFromString);
-
-//Always join Set unless we find out it impacts performance.
-let dbQuery = db.select(selectColumns)
+const results = await selectCardSetCols()
     .from(Card)
-    .innerJoin(Set, eq(Set.id, Card.setId));
+    .innerJoin(Set, eq(Set.id, Card.setId))
+    .where(drizzleFilterParams);
 
 //If the Set table is in the WHERE or in the SELECT, join it.
 // if(usedSetKeywords.length > 0 || currentDisplayConfig.join?.includes("Set")) {
 //     dbQuery.innerJoin(Set, eq(Set.id, Card.setId));
 // }
 
-const results = await dbQuery.where(drizzleFilterParams);
 console.log("Results:" + JSON.stringify(results));
-console.log(dbQuery.toSQL());
 
 //Redirect directly to the card detail page if only 1 result is found.
 if(results.length == 1) {
@@ -97,8 +92,12 @@ if(results.length == 1) {
 <MainLayout title={query}>
     <SearchHeader searchText={query} />
     <pre>{ stringifyLogicTree(tree, stringifySearchToken) }</pre>
-    <pre>{ dbQuery.toSQL().sql }</pre>
-    <SearchControls {displayFormat} {order} {dir} {page} {lastPage} {pageSize} />
+
+    <SearchControls>
+        <DisplayOptions {displayFormat} {order} {dir} />
+        <PaginationOptions url={Astro.url} {page} {lastPage} {pageSize} />
+    </SearchControls>
+
     <main>
         <div class="search-info">
             <p>
@@ -106,11 +105,16 @@ if(results.length == 1) {
             <span class="search-summary">where the card types include “creature”</span>
             </p>
         </div>
-        <!-- Display the correct markup depending on the display format. -->
+        {/* Display the correct markup depending on the display format. */} 
         {displayFormat == "image" && <CardGrid cards={results as GridCardModel[]} />}
         {displayFormat == "list" && <CardList cards={results as ListCardModel[]} />}
     </main>
-    <SearchControls {displayFormat} {order} {dir} {page} {lastPage} {pageSize} />
+
+    <SearchControls>
+        <DisplayOptions {displayFormat} {order} {dir} />
+        <PaginationOptions url={Astro.url} {page} {lastPage} {pageSize} />
+    </SearchControls>
+
 </MainLayout>
 
 <style>

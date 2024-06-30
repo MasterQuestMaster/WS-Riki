@@ -1,21 +1,22 @@
 ---
 import MainLayout from '@layouts/MainLayout.astro';
 import SearchHeader from '@layouts/SearchHeader.astro';
-import SearchControls from '@components/SearchControls.astro';
 import CardGrid from "@layouts/display-modes/CardGrid.astro";
 import CardList from "@layouts/display-modes/CardList.astro";
+import DisplayOptions from '@components/search/DisplayOptions.astro';
 
-import type GridCardModel from "src/models/GridCardModel";
-import type ListCardModel from "src/models/ListCardModel";
+import type GridCardModel from 'src/models/GridCardModel';
+import type ListCardModel from 'src/models/ListCardModel';
 
 import { db, eq, Card, Set } from 'astro:db';
 
 import displayConfig from "src/config/display-config.json";
-import { objectMap, objectFilter, formatDate } from 'src/scripts/utils';
-import { getColumnFromString } from 'src/scripts/db-utils';
-import DisplayOptions from '@components/DisplayOptions.astro';
+import rarityConfig from "src/config/rarity-config.json";
+import { formatDate } from 'src/scripts/utils';
+import { selectCardSetCols } from 'src/scripts/db-utils';
 
-const order = Astro.url.searchParams.get("order") ?? "set";
+
+const order = Astro.url.searchParams.get("order") ?? "rarity";
 const dir = Astro.url.searchParams.get("dir") ?? "asc";
 
 //Display Format: Perform a runtime check for the default value, since TS convert is only compile time.
@@ -35,9 +36,22 @@ if(!set) {
     });
 }
 
-const currentDisplayConfig = displayConfig[displayFormat];
-const selectColumns = objectMap<string,any>(currentDisplayConfig.select, getColumnFromString)
-const cards = await db.select(selectColumns).from(Card).where(eq(Card.setId, set.id));
+//Join Set because we need SetName column for CardList.
+const cards = await selectCardSetCols().from(Card)
+    .innerJoin(Set, eq(Set.id, Card.setId))
+    .where(eq(Card.setId, set.id));
+
+//take a result array, group it by rarity, then group the rarity by order defined in config.
+function groupBySortedRarity(cardList: typeof cards) {
+    const groupedList = Object.groupBy(cardList, item => item.rarity);
+    //Extract the keys of the group by (the rarities)
+    return Object.entries(groupedList).sort(([keyA],[keyB]) => {
+        //get the order for the rarities from the config.
+        const orderA = rarityConfig[keyA as keyof typeof rarityConfig].order;
+        const orderB = rarityConfig[keyB as keyof typeof rarityConfig].order;
+        return orderA - orderB; 
+    });
+}
 
 ---
 <MainLayout title={set.name}>
@@ -46,24 +60,35 @@ const cards = await db.select(selectColumns).from(Card).where(eq(Card.setId, set
         <div class="inner-flex">
           <div class="set-header-title">
               <h1>{set.name}</h1>        
-              <p>
-                {cards.length}&nbsp;cards &mdash;
-                Released&nbsp;{set.releaseDate ? formatDate(set.releaseDate) : "-"}
-              </p>
+              <p>{set.type} &mdash; {cards.length}&nbsp;cards</p>
+              <p>Released&nbsp;{set.releaseDate ? formatDate(set.releaseDate) : "-"}</p>
           </div>
 
           <DisplayOptions {displayFormat} {order} {dir} />
       
         </div>
-      </div>
+    </div>
     <main>
         {() => {
-            if(cards?.length) {
-                if(displayFormat == "image") return <CardGrid cards={cards as GridCardModel[]} />;
-                if(displayFormat == "list") return <CardList cards={cards as ListCardModel[]} />;
+            if(!cards?.length) {
+                return <div class="no-items">This set has no cards.</div>;
+            }
+            else if(displayFormat == "list") {
+                return <CardList cards={cards as ListCardModel[]} />;
+            }
+            else if(displayFormat == "image" && order != "rarity") {
+                return <CardGrid cards={cards as GridCardModel[]} />;
             }
             else {
-                return <div class="no-items">This set has no cards.</div>;
+                return groupBySortedRarity(cards).map(([rarity, grpCards]) => 
+                    <Fragment>
+                        <div class="set-section-header">
+                            <h2>{rarityConfig[rarity as keyof typeof rarityConfig].name}</h2>
+                            <hr/>
+                        </div>
+                        <CardGrid cards={grpCards as GridCardModel[]} />
+                    </Fragment>
+                );
             }
         }}
     </main>
@@ -71,7 +96,7 @@ const cards = await db.select(selectColumns).from(Card).where(eq(Card.setId, set
 
 <style>
     .set-header {
-        background-color: #acc188;
+        background-color: #e0c5a3;
         padding: 4px 2% 4px 2%;
     }
 
@@ -93,6 +118,24 @@ const cards = await db.select(selectColumns).from(Card).where(eq(Card.setId, set
         color:#333;
     }
 
+    .set-section-header {
+        display: block;
+        max-width: 1000px;
+        padding: 0 2.5%;
+        margin: 0 auto;
+        font-size: 14px;
+        font-weight: 500;
+
+        & h2 {
+            margin: 16px 0 0 0;
+            text-align: center;
+        }
+
+        & hr {
+            margin: 0;
+        }
+    }
+
     @media screen and (min-width: 800px) {
         .set-header-controls {
             display: flex;
@@ -104,6 +147,8 @@ const cards = await db.select(selectColumns).from(Card).where(eq(Card.setId, set
     }
 
     .no-items {
-        
+        display: block;
+        max-width: 1000px;
+        color: #333;
     }
 </style>
