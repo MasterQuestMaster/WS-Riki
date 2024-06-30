@@ -7,14 +7,15 @@ export default interface CardModel {
     rarity: string;
     setId: string;
     side: string;
-    level: number|null;
-    cost: number|null;
-    power: number|null;
-    soul: number|null;
-    trigger: string[]|null;
-    traits: string[]|null;
-    abilities: string[]|null;
-    flavor: string|null;
-    tags: string[]|null;
+    level?: number|null;
+    cost?: number|null;
+    power?: number|null;
+    soul?: number|null;
+    trigger?: string[]|null;
+    traits?: string[]|null;
+    abilities?: string[]|null;
+    flavor?: string|null;
+    tags?: string[]|null;
+    icons?: string[]|null;
     image: string;
 }
