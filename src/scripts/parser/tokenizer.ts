@@ -49,7 +49,11 @@ export class Tokenizer {
         //continue evaluating expressions
         else if(mode == "expression") {
             if (is_op_char(ch, this.operators)) return this.read_op();
-            if (is_digit(ch)) return this.read_number();
+            if(is_digit(ch)) {
+                //this only returns a value if the value is ONLY a number.
+                const number = read_number_value(this.input);
+                if(number) return { type: "num", value: number };
+            }
         }
 
         //strings are allowed in both modes.
@@ -58,12 +62,6 @@ export class Tokenizer {
 
         this.input.croak("Can't handle character: " + ch);
         return null;
-    }
-
-    //read a positive integer
-    private read_number(): Token {
-        const number = this.read_while(is_digit);
-        return { type: "num", value: number };
     }
 
     //Parse any operator, no matter if they're valid here.
@@ -139,8 +137,15 @@ export class Tokenizer {
 
 }
 
+//read a positive integer
+function read_number_value(input: InputStream) {
+    //For numbers, we can only return it if there is no text immediately following it ("2soul" is freetext)
+    //we terminate at quotes like scryfall would and also consider potential end of string (unlike "and/or").
+    return input.read_match(/\d+(?=[\s("']|$)/i);
+}
+
 function read_and_or(input: InputStream) {
-    //match the or and move the cursor.
+    //match the and/or and move the cursor.
     //The delimiter in not included in the match, so that it doesn't get read.
     return input.read_match(/(or|and)(?=[\s("'])/i);
 }
