@@ -40,7 +40,7 @@ export class DrizzleParser {
             if(Array.isArray(member)) {
                 //Type for array children is opposite type of the main and (and/or vs or/and).
                 const childAndOr = tree.type == "and" ? or : and;
-                const childStatements = member.map(this.parseMember);
+                const childStatements = member.map(this.parseMember, this);
 
                 if(childStatements.length > 0) {
                     expressions.push(childAndOr(...childStatements));
@@ -85,7 +85,7 @@ export class DrizzleParser {
                 const expressionList = options.dbColumn.map((column) => {
                     const dbCol = getColumnFromString(column);
                     return this.generateExpression(dbCol,adjustedOp, member.value, options.type, member.isNegated);
-                });
+                }, this);
 
                 return or(...expressionList);
             }
