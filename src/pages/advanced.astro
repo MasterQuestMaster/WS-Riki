@@ -6,19 +6,69 @@ import FormRow from "@layouts/FormRow.astro";
 import NumberOperator from "@components/controls/NumberOperator.astro";
 import ToggleSwitch from "@components/controls/ToggleSwitch.astro";
 
-import { db, Card, Set } from "astro:db";
+import { db, Card, Set as SetTable } from "astro:db";
 
 import { getDistinctArrayColValues } from "src/scripts/db-utils";
 import OrderSelect from "@components/controls/OrderSelect.astro";
 import DisplaySelect from "@components/controls/DisplaySelect.astro";
+import MinMaxFilter from "@components/controls/MinMaxFilter.astro";
 
 //If any post data exists, we convert the post data to a query string. Then we redirect to /search with that string.
+function processFormDataKey(data: FormData, key: string) {
+    const paramVal = data.getAll(key);
+    console.log("ParamVal", paramVal);
+
+    //filter out empty form values
+    if(!paramVal.toString().trim()) {
+        return;
+    }
+
+    if(key == "name" || key == "ability") {
+        //split into freetext words and quoted parts.
+        const wordPattern = /((?<qt>["']).*?[^\\](\k<qt>|$)|[^\s]+)/g;
+        //if g flag is used, the return value is a string[] with the matches.
+        let entries = paramVal.toString().match(wordPattern) as (string[]|null);
+
+        if(key == "ability") {
+            //append the keyword, and group the entries (if more than 1).
+            if(entries?.length == 1) {
+                return `${key}:${entries[0]}`;
+            }
+            else {
+                const withKeyword = entries?.map((entry) => `${key}:${entry}`);
+                return `(${withKeyword?.join(" ")})`;
+            }
+        }
+
+        return entries?.join(" ");
+    }
+    else if(Array.isArray(paramVal)) {
+        //for these columns, create multiple entries and join them.
+        //Trait has an any/all toggle which modifies the and/or. Icon is always "and".
+        const logicOp = (key == "icon" || (key == "traits" && data.get("traits-op") == "all")) ? "and" : "or";
+        const withKeyword = paramVal?.map((val) => `${key}:${val}`);
+        return `(${withKeyword?.join(` ${logicOp} `)})`;
+    }
+    else {
+        return `${key}${data.get(key+"-op") ?? ":"}${paramVal}`;
+    }
+}
 
 if(Astro.request.method === "POST") {
     const data = await Astro.request.formData();
+    //filter form entries that shouldn't be in the search query.
+    const uniqueKeys = [...new Set(data.keys())]
+        .filter(key => !key.endsWith("-op") && key != "as" && key != "order" );
 
-    console.log("Form Data");
-    
+    let queryArray = uniqueKeys.reduce((result, key) => {
+        const queryEntry = processFormDataKey(data, key);
+        if(queryEntry) {
+            result.push(queryEntry);
+        }
+
+        return result;
+    }, [] as string[])
+
     /* 
         TODO: Some cards should have multiple values that should be ORd, like
         trigger, rarity, expansion.
@@ -28,38 +78,20 @@ if(Astro.request.method === "POST") {
 
         For name and ability we should split the values (but keep quotes strings).
         For name just search without keyword.
+
+        We also have to consider as/order as additional url params.
+
+        Trigger "no_trigger" should be mapped to "none"
     */
-
-    const queryArray = Array.from(data)
-        .filter(([key, val]) => val.toString().trim() && !key.endsWith("-op") )
-        .map(([key,val]) => {
-            if(key == "name" || key == "ability") {
-                //split into freetext words and quoted parts.
-                const wordPattern = /((?<qt>["']).*?[^\\](\k<qt>|$)|[^\s]+)/g;
-                //if g flag is used, the return value is a string[] with the matches.
-                let entries = val.toString().match(wordPattern) as (string[]|null);
-
-                if(key == "ability") {
-                    //append the keyword and group the entries.
-                    const withKeyword = entries?.map((entry) => `ability:${entry}`);
-                    return `(${withKeyword?.join(" ")})`;
-                }
-
-                return entries?.join(" ");
-            }
-            else if(key == "trigger" || key == "rarity" || key == "set" || key == "trait") {
-                //TODO: We can only parse this once we know the form that
-                //the triggers/rarities are going to take with a multi-value select.
-                return `${key}:${val}`;
-            }
-            else {
-                return `${key}${data.get(key+"-op") ?? ":"}${val}`;
-            }
-        });
-
-    console.log(queryArray);
     
+    console.log(queryArray);
+
     const query = queryArray.join(" ");
+    const urlParams = new URLSearchParams()
+    urlParams.append("q", query);
+    urlParams.append("as", data.get("as")?.toString() ?? "image");
+    urlParams.append("order", data.get("order")?.toString() ?? "set");
+    
     return Astro.redirect("/search?q=" + encodeURIComponent(query));
 
     // data.forEach((value, key) => {
@@ -70,7 +102,7 @@ if(Astro.request.method === "POST") {
 }
 
 //Load expansions
-const sets = await db.select().from(Set);
+const sets = await db.select().from(SetTable);
 
 const traits = await getDistinctArrayColValues(Card.traits);
 console.log(traits);
@@ -147,20 +179,16 @@ console.log(tags);
                     </select>
                 </FormRow>
                 <FormRow label="Level" _for="search-level">
-                    <NumberOperator name="level-op" id="search-level-op" label="Level Operator" />
-                    <input name="level" id="search-power" type="number" min="0" max="3" placeholder="(0-3)" />
+                    <MinMaxFilter id="search-level" namePrefix="level" min={0} max={3} />
                 </FormRow>
                 <FormRow label="Cost" _for="search-cost">
-                    <NumberOperator name="cost-op" id="search-cost-op" label="Cost Operator" />
-                    <input name="cost" id="search-cost" type="number" min="0" max="9" placeholder="(0-9)" />
+                    <MinMaxFilter id="search-cost" namePrefix="cost" min={0} max={9} />
                 </FormRow>
                 <FormRow label="Power" _for="search-power">
-                    <NumberOperator name="power-op" id="search-power-op" label="Power Operator" />
-                    <input name="power" id="search-power" type="number" min="0" max="20000" step="500" placeholder="500"/>
+                    <MinMaxFilter id="search-power" namePrefix="power" min={500} max={14000} step={500} />
                 </FormRow>
                 <FormRow label="Soul" _for="search-soul">
-                    <NumberOperator name="soul-op" id="search-soul-op" label="Soul Operator" />
-                    <input name="soul" id="search-soul" type="number" min="0" max="3" placeholder="(0-3)" />
+                    <MinMaxFilter id="search-soul" namePrefix="soul" min={0} max={3} />
                 </FormRow>
                 <FormRow label="Trigger" _for="search-trigger">
                     <select name="trigger" id="search-trigger" multiple></select>
@@ -203,9 +231,8 @@ console.log(tags);
                     </fieldset>
                 </FormRow>
                 <FormRow label="Preferences">
-                    <label class="visually-hidden" for="display-as">Display</label>
-                    <DisplaySelect id="display-as" />
-                    <OrderSelect id="display-order" />
+                    <DisplaySelect name="as" />
+                    <OrderSelect name="order" />
                 </FormRow>
                 <FormRow label="" sticky>
                     <input class="search-btn" type="submit" value="Search with these options" />
@@ -267,12 +294,25 @@ console.log(tags);
 </script>
 
 <style is:global>
-    /* TOM Select (global cause they don't have the scope) */
+    /* TOM Select styles (global cause they don't have the scope) */
     #advanced-search-form {
         & .ts-dropdown, .ts-control, .ts-control input {
             font-size: 16px;
         }
+
+        & .ts-wrapper {
+            flex-grow: 1;
+            margin: 0 5px 0 0;
+            max-width: 100%;
+        }
     }
+
+    @media screen and (min-width: 740px) {
+        #advanced-search-form .ts-wrapper {
+            max-width: 440px;
+        }
+    }
+
 </style>
 
 <style>
@@ -285,22 +325,18 @@ console.log(tags);
         font-size: 16px;
         line-height: 20px;
         padding: 8px 10px;
-    }
 
-    .content {
-        & input[type="text"], input[type="number"], select {
-            flex-grow: 1;
-            margin: 0 5px 0 0;
-            max-width: 100%;
-        }
+        flex-grow: 1;
+        margin: 0 5px 0 0;
+        max-width: 100%;
     }
 
     @media screen and (min-width: 740px) {
-        .content {
+        #advanced-search-form {
             & input[type="text"], input[type="number"], select {
                 max-width: 420px;
             }
-        } 
+        }
     }
 
     .toggle-switch {

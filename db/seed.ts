@@ -4,7 +4,7 @@ import { db, Card, Set } from 'astro:db';
 export default async function seed() {
 	
 	await db.insert(Set).values([
-		{id:"SE26", name: "Sword Art Online II Vol. 2", shortName:"SAO2V2", type:"Extra Pack", releaseDate: new Date("2016-05-27")},
+		{id:"SE26", name: "Sword Art Online II Vol. 2", shortName:"SAO2V2", type:"Extra Booster", releaseDate: new Date("2016-05-27")},
 		{id:"S106", name: "SPY x FAMILY", type: "Booster Pack", releaseDate: new Date("2024-01-26") },
 		{id:"S92", name: "Tokyo Revengers", type: "Booster Pack", releaseDate: new Date("July 29, 2022")}
 	]);

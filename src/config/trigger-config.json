@@ -3,7 +3,7 @@
         "name": "Unknown Trigger",
         "image": "/images/triggers/any_trigger.webp"
     },
-    "no_trigger": {
+    "none": {
         "name": "No Trigger",
         "image": "/images/triggers/no_trigger.webp"
     },

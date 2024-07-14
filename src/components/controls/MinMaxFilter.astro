@@ -1,0 +1,49 @@
+---
+import { range } from "@scripts/utils";
+
+interface Props {
+    id: string;
+    namePrefix: string;
+    min: number;
+    max: number;
+    step?: number;
+}
+
+const {min, max, step = 1, id, namePrefix, ...props} = Astro.props;
+//Create an array that has all the possible options
+const numberOptions = range(min, max, step);
+
+---
+<div class="min-max-container flex-row-start">
+    <select {id} name={namePrefix + "-min"} aria-label={namePrefix + " minimum"} {...props}>
+        <option value=""></option>
+        {numberOptions.map((num) => <option value={num}>{num}</option>)}
+    </select>
+    <span>to</span>
+    <select name={namePrefix + "-max"} aria-label={namePrefix + " maximum"} {...props}>
+        <option value=""></option>
+        {numberOptions.map((num) => <option value={num}>{num}</option>)}
+    </select>
+</div>
+
+<style>
+    .min-max-container {
+        max-width: 50%;
+        flex-grow: 1;
+        margin: 0 5px 0 0;
+
+        & span {
+            margin-right: 5px;
+        }
+    }
+
+    @media screen and (min-width: 740px) {
+        .min-max-container {
+            max-width: 220px;
+        }
+    }
+
+    option {
+        direction: rtl;
+    }
+</style>

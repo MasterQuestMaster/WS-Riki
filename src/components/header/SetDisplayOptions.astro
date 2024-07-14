@@ -1,0 +1,48 @@
+---
+//import TypeSelect from '@component'
+import TypeSelect from '@components/controls/TypeSelect.astro';
+import OrderSelect from '@components/controls/OrderSelect.astro';
+import DirectionSelect from '@components/controls/DirectionSelect.astro';
+
+interface Props {
+    type: string;
+    order: string;
+    dir: string;
+}
+
+const {type, order, dir} = Astro.props;
+
+---
+<div class="flex-row-start" data-display-options>
+    <span class="type-filter">
+        <TypeSelect name="type" value={type} />
+    </span>
+    <OrderSelect name="order" value={order} />
+    <DirectionSelect name="dir" value={dir} />
+</div>
+
+<script>
+    //Scripts is only executed once, even if the component is included multiple times, so add once for all instances.
+    document.querySelectorAll("[data-display-options]").forEach((container) => {
+        const typeSelect = container.querySelector("[name=type]");
+        typeSelect?.addEventListener("change", changeUrlParams);
+
+        const orderSelect = container.querySelector("[name=order]");
+        orderSelect?.addEventListener("change", changeUrlParams);
+
+        const directionSelect = container.querySelector("[name=dir]");
+        directionSelect?.addEventListener("change", changeUrlParams);
+    });
+
+    function changeUrlParams(this:HTMLSelectElement) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set(this.name, this.value);
+        window.location.search = urlParams.toString();
+    }
+</script>
+
+<style>
+    .type-filter {
+        margin-right: 10px;
+    }
+</style>

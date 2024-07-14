@@ -82,3 +82,10 @@ export function objectFilter<T>(obj:{[index:string]: T}, fn:(val:T,key:string)=>
     Object.entries(obj).filter(([key,val]) => fn(val, key))
   );
 }
+
+export function range(start: number, stop: number, step = 1):number[] {
+  const arrayLength = Math.ceil((stop - start) / step) + 1;
+  return Array(arrayLength)
+    .fill(start)
+    .map((x, y) => x + y * step)
+}

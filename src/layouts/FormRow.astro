@@ -10,7 +10,7 @@ const formattedLabel = label ? label + ":" : ""; //Append ":" if not empty.
 ---
 <div class:list={["form-row", {sticky: sticky}]}>
     <label class="flex-row-start" for={_for}>{formattedLabel}</label>
-    <div class="content">
+    <div class="content flex-row-start">
         <slot />
     </div>
 </div>
