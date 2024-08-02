@@ -34,5 +34,29 @@
     "RR+":{
         "name": "Double Rare+",
         "order": 9
+    },
+    "SR":{
+        "name": "Super Rare",
+        "order": 10
+    },
+    "RRR":{
+        "name": "Triple Rare",
+        "order": 11
+    },
+    "OFR":{
+        "name": "Overframe Rare",
+        "order": 12
+    },
+    "SP":{
+        "name": "Special",
+        "order": 13
+    },
+    "SSP":{
+        "name": "Super Special Rare",
+        "order": 14
+    },
+    "SEC":{
+        "name": "Secret Rare",
+        "order": 15
     }
 }
