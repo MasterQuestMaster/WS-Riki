@@ -17,11 +17,13 @@ const Card = defineTable({
   columns: {
     id: column.text({primaryKey: true}), //SPY_S106_E001, sanitized
     cardno: column.text(), //SPY/S106-E001
-    name: column.text(),
+    name: column.text(), 
+    titleCode: column.text(), //SPY
     type: column.text(), //Character/Event/Climax
     color: column.text(), //YELLOW/RED/GREEN/BLUE
     rarity: column.text(), //C/U/R/RR...
     setId: column.text({references: () => Set.columns.id}),
+    neo: column.json(), //["DAL","Fdl"]
     side: column.text(), //W/S
     level: column.number({optional: true}),
     cost: column.number({optional: true}),
@@ -30,6 +32,7 @@ const Card = defineTable({
     trigger: column.json({optional: true}), //Soul/Gate...
     traits: column.json({optional: true}), //Magic/Weapon/Avatar...
     abilities: column.json({optional: true}), //【AUTO】 [(1) Put the top card of your deck into your clock] When this card is placed...
+    abilities_ph: column.json({optional: true}), // Search a <<TRAIT>> character...
     flavor: column.text({optional: true}),
     tags: column.json({optional: true}), //CXCombo/Riki
     icons: column.json({optional:true}),
@@ -39,17 +42,22 @@ const Card = defineTable({
 
 //Group sets into NeoStandards (https://en.ws-tcg.com/rules/deck/)
 //Each set can be part of multiple groups. The groups are decided by DB-JSON first part (sanitized)
-//TODO: Maybe we make this into a NeoStandard table and give set a "codes" array column to check for.
+
 /*
-const SetRelation = defineTable({
+Neo-Std: Have the ID in the Card table as "neo" (JSON array).
+Codes in this table are JSON array.
+Search by LIKE.
+*/
+
+const NeoStandard = defineTable({
   columns: {
-    group: column.text(),
-    setId: column.text({references: () => Set.columns.id})
+    id: column.text({primaryKey: true}),
+    title: column.text(),
+    codes: column.json()
   }
 });
-*/
 
 // https://astro.build/db/config
 export default defineDb({
-  tables: { Set, Card }
+  tables: { Set, Card, NeoStandard }
 });
