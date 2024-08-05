@@ -15,7 +15,16 @@ export interface IKeywordOptions {
         /** DB Column reference in form "tablename.colname". Can be array of columns. */
         dbColumn: string | string[],
         /** If enabled, only exact matches (not partial) will be found. */
-        forceExactMatches?:boolean
+        forceExactMatches?:boolean,
+        /** Configure placeholder search with an additional column */
+        placeholderSearch?:{
+            /** Map DB columns to their partner column which has the pattern replaced with the placeholder */
+            columnMap: Record<string,string>,
+            /** Placeholder used in DB column (also used for search) */
+            placeholder: string,
+            /** The pattern that the placeholder replaces. */
+            pattern: string
+        }
     }
 }
 
@@ -91,11 +100,36 @@ export class DrizzleParser {
             }
 
             const dbCol = getColumnFromString(options.dbColumn);
+            const phColName = options.placeholderSearch?.columnMap?.[options.dbColumn];
+
+            if(phColName && options.type != "number" && member.value !== null) {7
+                //in generate expression we remove all % so this can't be done here. Maybe pass placeholder to generate expression.
+                //it's only relevant if it's a string with a value.
+                //generate expression is only called on 2 instances in this func, so we could just replace % here instead.
+                //then we don't need the placeholder thingy in generateExpression.
+                const genericValueForMainCol = member.value.replaceAll(options.placeholderSearch!.placeholder, "%");
+                const genericValueForMappedCol = member.value.replace(new RegExp(options.placeholderSearch!.pattern, "gi"), options.placeholderSearch!.placeholder);
+
+                const phCol = getColumnFromString(phColName);
+                const mainExpression = this.generateExpression(dbCol, adjustedOp, genericValueForMainCol, options.type, member.isNegated, options.placeholderSearch!.placeholder);
+                const phExpression = this.generateExpression(phCol, adjustedOp, genericValueForMappedCol, options.type, member.isNegated);
+                //both must be fulfilled to find correct matches.
+                //in the generateExpression function, we must replace the placeholder value with % after removing existing %.
+                return and(mainExpression, phExpression);
+            }
+
             return this.generateExpression(dbCol, adjustedOp, member.value, options.type, member.isNegated);
         }
     }
 
-    private generateExpression(column:Column, operator: string, value: string|null, type:"string"|"number"|"array", isNegated=false ) {
+    private generateExpression(
+        column:Column, 
+        operator: string, 
+        value: string|null, 
+        type:"string"|"number"|"array",
+        isNegated=false,
+        likePlaceholder?:string, //instances of this in value will be used as % in like. 
+    ) {
         //"search none".
         if(value == null) {
             return isNegated ? isNotNull(column) : isNull(column);

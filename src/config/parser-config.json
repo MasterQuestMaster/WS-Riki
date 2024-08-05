@@ -145,6 +145,13 @@
             "aliases": ["a", "text"],
             "dbColumn": "Card.abilities",
             "allowSearchNone": true,
+            "placeholderSearch": {
+                "columnMap": {
+                    "Card.abilities": "Card.abilities_ph"
+                },
+                "placeholder": "《TRAIT》",
+                "pattern": "《.+?》"
+            },
             "autoReplace": [
                 {"search":"<<", "replace":"《"},
                 {"search":">>", "replace":"》"},
