@@ -9,8 +9,10 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro check && astro build --remote",
-    "preview": "astro preview",
-    "astro": "astro"
+    "preview": "astro build --remote && wrangler pages dev",
+    "astro": "astro",
+    "deploy": "astro build --remote && wrangler pages deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@astrojs/check": "^0.7.0",
@@ -27,6 +29,8 @@
     "typescript": "^5.4.5"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240729.0",
+    "wrangler": "^3.68.0",
     "cssnano": "^7.0.1",
     "postcss-preset-env": "^9.5.14",
     "tsx": "^4.10.5"
