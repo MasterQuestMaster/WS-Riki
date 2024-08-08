@@ -19,13 +19,16 @@ export interface TriggerInfo {
 export function getTriggerInfo(triggerNames:string[]):TriggerInfo[] {
     if(!triggerNames?.length) {
         //no trigger
-        return [triggerInfo["no_trigger"]];
+        return [triggerInfo["none"]];
     }
 
-    return triggerNames.map((name) => triggerInfo[name.toLowerCase()] ?? triggerInfo["_unknown"]);
+    return triggerNames.map((name) => triggerInfo[name.toLowerCase()] ?? {
+        "name": "Unknown Trigger",
+        "image": "/images/triggers/any_trigger.webp"
+    });
 }
 
 export function getAllTriggerInfos():TriggerInfo[] {
     //"_" are special values that are excluded.
-    return Object.values(triggerInfo).filter((tr) => !tr.id.startsWith("_"));
+    return Object.values(triggerInfo);
 }

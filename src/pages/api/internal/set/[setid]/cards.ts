@@ -32,8 +32,6 @@ export const GET: APIRoute = async ({params}) => {
     )
 }
 
-//TODO: Make a WS ENG DB Model so we can import easier.
-
 export const POST: APIRoute = async ({params, request}) => {
     const setId = params.setid ?? "";
     const setJson = await request.json() as any[];
