@@ -18,7 +18,7 @@ export const onRequest = defineMiddleware((context, next) => {
     if(context.url.pathname.startsWith(INTERNAL_API_PATH)) {
         // If a basic auth header is present, it wil take the string form: "Basic authValue"
         const authHeader = context.request.headers.get("Authorization");
-        if (authHeader != import.meta.env.RIKI_INTERNAL_API_KEY) {
+        if (!authHeader || authHeader != import.meta.env.RIKI_INTERNAL_API_KEY) {
             return new Response("API key required", {
                 status: 401,
                 headers: {
