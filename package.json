@@ -24,7 +24,8 @@
     "date-fns": "^3.6.0",
     "node-html-parser": "^6.1.13",
     "tom-select": "^2.3.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "wrangler": "^3.69.1"
   },
   "devDependencies": {
     "cssnano": "^7.0.1",

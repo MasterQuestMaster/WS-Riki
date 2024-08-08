@@ -12,7 +12,7 @@ const { cards } = Astro.props;
     <div class="inner-flex">
         {cards.map((card) => 
             <div class="card">
-                <a href={`card/${card.id}`}>
+                <a href={`/card/${card.id}`}>
                     <img src={card.image} alt={card.name} title={`${card.name} (${card.cardno})`} loading="eager" />
                 </a>
             </div>

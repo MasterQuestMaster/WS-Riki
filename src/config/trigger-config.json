@@ -1,8 +1,4 @@
 {
-    "_unknown": {
-        "name": "Unknown Trigger",
-        "image": "/images/triggers/any_trigger.webp"
-    },
     "none": {
         "name": "No Trigger",
         "image": "/images/triggers/no_trigger.webp"
