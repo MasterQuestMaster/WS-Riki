@@ -11,6 +11,7 @@ export const GET: APIRoute = async () => {
 export const POST: APIRoute = async ({params, request}) => {
     //Expected request body: [{title:"xxx", codes:["xxx","yyy"]},...]
     //Can be a partial json. only add/update.
+    //TODO: maybe use zod to parse the input array: Type safety and could be made into a type for the import scripts.
     const neoJson = await request.json() as any[];
 
     let insertErrors: any[] = [];

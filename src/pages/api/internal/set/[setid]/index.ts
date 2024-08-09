@@ -13,13 +13,10 @@ TODO: We need to protect this internal API from external access so others can't 
 export const GET: APIRoute = async ({locals, params}) => {
   // load set data from json and return it (only info, no set)
   const setId = params.setid ?? "";
-  const setResult = await db.select().from(Set).where(eq(Set.id, setId));
+  const setResult = await db.select().from(Set).where(eq(Set.id, setId)).get();
 
   return new Response(
-    JSON.stringify({
-      greeting: 'Hello',
-      message: locals.message
-    }),
+    JSON.stringify(setResult),
   )
 }
 

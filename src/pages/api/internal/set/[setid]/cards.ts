@@ -57,7 +57,6 @@ export const POST: APIRoute = async ({params, request}) => {
 
     let insertErrors:any[] = [];
 
-    //TODO: use onConflictUpdate.
     setJson.forEach(async (card) => {
         try {
             await db.insert(Card).values([ 

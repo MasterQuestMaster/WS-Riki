@@ -11,8 +11,6 @@ export const onRequest = defineMiddleware((context, next) => {
     //Maybe we must install wrangler and the other cloudflare stuff.
     //TODO: Install an Astro Cloudflare Pages test app to see what it contains that we don't have.
 
-    console.log("middleware, api key: " + import.meta.env.RIKI_INTERNAL_API_KEY);
-
     context.locals.message = "Message from Middleware";
     
     if(context.url.pathname.startsWith(INTERNAL_API_PATH)) {
