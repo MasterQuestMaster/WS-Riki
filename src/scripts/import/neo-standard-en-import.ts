@@ -10,19 +10,6 @@
 import {parse, HTMLElement} from "node-html-parser";
 import importConfig from "src/config/import-config.json";
 
-export interface JsonNeoStandard {
-    title: string;
-    codes: string[];
-}
-
-export function getDbNeoStandardFromJson(neo: JsonNeoStandard) {
-    return {
-        id: neo.codes[0],
-        title: neo.title,
-        codes: neo.codes
-    };
-}
-
 export async function getNeoStandardsFromWeb() {
     //Load the deck construction website
     const deckConstrResponse = await fetch(importConfig.urlNeoStandardEN);

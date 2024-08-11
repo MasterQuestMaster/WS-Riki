@@ -2,12 +2,11 @@ import { db, eq, sql, Set, Card } from 'astro:db'
 import type { APIRoute } from 'astro'
 
 import { getDbCardFromJson } from '@scripts/import/wsdb-eng-import';
+import { SetFileSchema } from 'src/schemas/SetFile';
 
 /*
 set endpoint is for importing set details.
 This "cards" endpoint is for getting or importing cards for a set (from a JSON).
-
-TODO: We need to protect this internal API from external access so others can't tamper with the sets.
 
 */
 
@@ -32,20 +31,25 @@ export const GET: APIRoute = async ({params}) => {
     )
 }
 
+//TODO: Handle special rarities in normal set files by inserting them in a "alternate versions" table instead.
+
 export const POST: APIRoute = async ({params, request}) => {
     const setId = params.setid ?? "";
-    const setJson = await request.json() as any[];
-
+    
     //Validate POST body (should be a JSON file from WS-EN-DB).
-    if(!setJson || !Array.isArray(setJson)) {
+    const setFileParse = SetFileSchema.safeParse(await request.json());
+
+    if(!setFileParse.success) {
         return new Response(
-            JSON.stringify({ error: "Expected JSON card array in body" }),
+            JSON.stringify({ error: setFileParse.error }),
             { status: 400 }
         );
     }
 
+    const setFile = setFileParse.data;
+
     try {
-        const setName = setJson.length == 0 ? setId : setJson[0].expansion;
+        const setName = setFile.length == 0 ? setId : setFile[0].expansion;
         await createSetIfNotExists(setId, setName);
     }
     catch(e: any) {
@@ -57,7 +61,7 @@ export const POST: APIRoute = async ({params, request}) => {
 
     let insertErrors:any[] = [];
 
-    setJson.forEach(async (card) => {
+    setFile.forEach(async (card) => {
         try {
             await db.insert(Card).values([ 
                 await getDbCardFromJson(card) 
@@ -86,7 +90,7 @@ export const POST: APIRoute = async ({params, request}) => {
             });
         }
         catch(e:any) {
-            insertErrors.push(`Error inserting ${card.id}: ${e.message}`);
+            insertErrors.push(`Error inserting ${card.code}: ${e.message}`);
         }
 
     });

@@ -102,7 +102,7 @@ export class DrizzleParser {
             const dbCol = getColumnFromString(options.dbColumn);
             const phColName = options.placeholderSearch?.columnMap?.[options.dbColumn];
 
-            if(phColName && options.type != "number" && member.value !== null) {7
+            if(phColName && options.type != "number" && member.value !== null) {
                 //in generate expression we remove all % so this can't be done here. Maybe pass placeholder to generate expression.
                 //it's only relevant if it's a string with a value.
                 //generate expression is only called on 2 instances in this func, so we could just replace % here instead.

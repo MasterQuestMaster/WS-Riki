@@ -1,6 +1,6 @@
-import { db, sql, NeoStandard } from 'astro:db'
-import type { APIRoute } from 'astro'
-import { getDbNeoStandardFromJson } from '@scripts/import/neo-standard-en-import';
+import { db, sql, NeoStandard } from 'astro:db';
+import type { APIRoute } from 'astro';
+import { NeoStandardsSchema } from 'src/schemas/NeoStandards';
 
 export const GET: APIRoute = async () => {
     //{id,title,codes[]} format.
@@ -11,15 +11,29 @@ export const GET: APIRoute = async () => {
 export const POST: APIRoute = async ({params, request}) => {
     //Expected request body: [{title:"xxx", codes:["xxx","yyy"]},...]
     //Can be a partial json. only add/update.
-    //TODO: maybe use zod to parse the input array: Type safety and could be made into a type for the import scripts.
-    const neoJson = await request.json() as any[];
+
+    //Validate POST body (should be a JSON file from WS-EN-DB).
+    const neoParse = NeoStandardsSchema.safeParse(await request.json());
+
+    if(!neoParse.success) {
+        return new Response(
+            JSON.stringify({ error: neoParse.error }),
+            { status: 400 }
+        );
+    }
+
+    const neoList = neoParse.data;
 
     let insertErrors: any[] = [];
 
-    neoJson.forEach(async neo => {
+    neoList.forEach(async neo => {
         try {
             await db.insert(NeoStandard)
-                .values(getDbNeoStandardFromJson(neo))
+                .values([{
+                    id: neo.codes[0],
+                    title: neo.title,
+                    codes: neo.codes
+                }])
                 .onConflictDoUpdate({
                     target: NeoStandard.id,
                     set: {
@@ -29,7 +43,7 @@ export const POST: APIRoute = async ({params, request}) => {
                 });
         }
         catch(e:any) {
-            insertErrors.push(`Error inserting Neo-Standard ${neo.id}: ${e.message}`);
+            insertErrors.push(`Error inserting Neo-Standard "${neo.title}": ${e.message}`);
         }
     });
 

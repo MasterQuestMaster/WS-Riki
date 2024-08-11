@@ -57,6 +57,13 @@ const NeoStandard = defineTable({
   }
 });
 
+//TODO: Keep SHA of set file somewhere, to check if file changed.
+//We can keep it in set table, but we might split a set file in TD/BP pack?
+//Actually, if we don't split, we get "Trial Deck" section in Set Overview (might be possible with a join query).
+//We can also still find TD cards with rarity filter. How to handle TD SP? We should be able to find them as TD cards.
+//SSP version as subversion of the base card? So we have an extra table for special versions?
+//If we find a special version in the regular files, we specially handle it. (todo in cards.ts)
+
 // https://astro.build/db/config
 export default defineDb({
   tables: { Set, Card, NeoStandard }

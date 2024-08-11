@@ -1,29 +1,8 @@
 import { getTagsFromCardText } from "./categorizer";
 import { db, like, NeoStandard } from "astro:db";
+import {type SetFileEntry } from "src/schemas/SetFile";
 
-export interface JsonCard {
-    name: string;
-    code: string;
-    rarity: string;
-    expansion: string;
-    side: string;
-    type: string;
-    color: string;
-    level: string;
-    cost: string;
-    power: string;
-    soul: number;
-    trigger: string[];
-    attributes: string[];
-    ability: string[];
-    flavor_text: string;
-    set: string;
-    release: string;
-    sid: string;
-    image: string;
-}
-
-export async function getDbCardFromJson(card: JsonCard) {
+export async function getDbCardFromJson(card: SetFileEntry) {
     const dbCard = {
         //Replace special chars with underscores to form card id.
         id: card.code.replaceAll(/[^a-zA-Z0-9]/, "_"),

@@ -1,26 +1,33 @@
-import { db, eq, Set, Card } from 'astro:db'
+import { db, eq, Set, Card, count } from 'astro:db'
 import type { APIRoute } from 'astro'
 
-/* Probably use an endpoint to import each set json file with 1 request. But is it get/post? 
-I'd say post since post is usually inserting. 
-But we can implement get to check if it exists. 
-Delete can remove the sets.
-
-TODO: We need to protect this internal API from external access so others can't tamper with the sets.
-
-*/
-
 export const GET: APIRoute = async ({locals, params}) => {
-  // load set data from json and return it (only info, no set)
-  const setId = params.setid ?? "";
-  const setResult = await db.select().from(Set).where(eq(Set.id, setId)).get();
+    // load set data from json and return it (only info, no cards)
+    //TODO: Currently we include card count through JOIN. It could be an option to save it as a separate column in Set table when updating.
+    const setId = params.setid ?? "";
 
-  return new Response(
-    JSON.stringify(setResult),
-  )
-}
-
-export const POST: APIRoute = async ({params, request}) => {
-  //insert more set details
-  return new Response("");
+    try {
+        const setResult = await db.select({
+                id: Set.id,
+                name: Set.name,
+                type: Set.type,
+                shortName: Set.shortName,
+                releaseDate: Set.releaseDate,
+                cardCount: count(Card.cardno)
+            }).from(Set)
+            .innerJoin(Card, eq(Set.id, Card.setId))
+            .where(eq(Set.id, setId))
+            .groupBy(Set.id)
+            .get();
+            
+        return new Response(
+            JSON.stringify(setResult)
+        )
+    }
+    catch(e: any) {
+        return new Response(
+            JSON.stringify({ error: `Failed to load set data for ${e.message}`}),
+            { status: 500 }
+        );
+    }
 }
