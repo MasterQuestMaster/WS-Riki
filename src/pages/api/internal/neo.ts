@@ -1,6 +1,7 @@
-import { db, sql, NeoStandard } from 'astro:db';
+import { db, sql, NeoStandard, count } from 'astro:db';
 import type { APIRoute } from 'astro';
 import { NeoStandardsSchema } from 'src/schemas/NeoStandards';
+import { generateBatchResponseMessageAndStatus } from '@scripts/utils';
 
 export const GET: APIRoute = async () => {
     //{id,title,codes[]} format.
@@ -17,16 +18,15 @@ export const POST: APIRoute = async ({params, request}) => {
 
     if(!neoParse.success) {
         return new Response(
-            JSON.stringify({ error: neoParse.error }),
+            JSON.stringify({ message: neoParse.error }),
             { status: 400 }
         );
     }
 
     const neoList = neoParse.data;
-
-    let insertErrors: any[] = [];
-
-    neoList.forEach(async neo => {
+    let countErrors = 0;
+    
+    const responses = await Promise.all(neoList.map(async neo => {
         try {
             await db.insert(NeoStandard)
                 .values([{
@@ -41,22 +41,33 @@ export const POST: APIRoute = async ({params, request}) => {
                         codes: sql`excluded.codes`
                     }
                 });
+
+            return {
+                title: neo.title,
+                codes: neo.codes,
+                status: 200,
+                message: `The Neo Standard ${neo.title} was successfully inserted/updated.`
+            };
         }
         catch(e:any) {
-            insertErrors.push(`Error inserting Neo-Standard "${neo.title}": ${e.message}`);
-        }
-    });
+            countErrors++;
 
-    if(insertErrors.length > 0) {
-        return new Response(
-            JSON.stringify({ 
-                error: "Error inserting Neo Standards.",
-                errorList: insertErrors 
-            }),
-            { status: 500 }
-        );
-    }
-    else {
-        return new Response("Neo Standards were successfully inserted", { status: 200 });
-    }
+            return {
+                title: neo.title,
+                codes: neo.codes,
+                status: 500,
+                message: `Error inserting/updating Neo-Standard "${neo.title}": ${e.message}`
+            };
+        }
+    }))
+
+    const overallResponseData = generateBatchResponseMessageAndStatus(countErrors, neoList.length);
+
+    return new Response(
+        JSON.stringify({
+            message: overallResponseData.message,
+            details: responses
+        }),
+        { status: overallResponseData.status } 
+    );
 }

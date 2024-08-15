@@ -3,6 +3,7 @@ import type { APIRoute } from 'astro'
 
 import { getDbCardFromJson } from '@scripts/import/wsdb-eng-import';
 import { SetFileSchema } from 'src/schemas/SetFile';
+import { generateBatchResponseMessageAndStatus } from '@scripts/utils';
 
 /*
 set endpoint is for importing set details.
@@ -32,6 +33,7 @@ export const GET: APIRoute = async ({params}) => {
 }
 
 //TODO: Handle special rarities in normal set files by inserting them in a "alternate versions" table instead.
+//Or put them in the same table (for easier finding) but group them together in search results (show picture of the matching one).
 
 export const POST: APIRoute = async ({params, request}) => {
     const setId = params.setid ?? "";
@@ -41,7 +43,10 @@ export const POST: APIRoute = async ({params, request}) => {
 
     if(!setFileParse.success) {
         return new Response(
-            JSON.stringify({ error: setFileParse.error }),
+            JSON.stringify({
+                setId: setId,
+                message: setFileParse.error 
+            }),
             { status: 400 }
         );
     }
@@ -54,14 +59,17 @@ export const POST: APIRoute = async ({params, request}) => {
     }
     catch(e: any) {
         return new Response(
-            JSON.stringify({ error: `Error when creating set "${setId}": ${e.message}` }),
+            JSON.stringify({ 
+                setId: setId,
+                message: `Error when creating set "${setId}": ${e.message}` 
+            }),
             { status: 500 }
         );
     }
 
-    let insertErrors:any[] = [];
+    let countErrors = 0;
 
-    setFile.forEach(async (card) => {
+    const responses = await Promise.all(setFile.map(async (card) => {
         try {
             await db.insert(Card).values([ 
                 await getDbCardFromJson(card) 
@@ -88,25 +96,39 @@ export const POST: APIRoute = async ({params, request}) => {
                     image: sql`excluded.image`
                 }
             });
+
+            return {
+                cardCode: card.code,
+                cardName: card.name,
+                status: 200,
+                message: `The card "${card.name}" (${card.code}) was successfully inserted/updated.`
+            }
         }
         catch(e:any) {
-            insertErrors.push(`Error inserting ${card.code}: ${e.message}`);
+            countErrors++;
+
+            return {
+                cardCode: card.code,
+                cardName: card.name,
+                status: 500,
+                message: `Error inserting/updating "${card.name}" ${card.code}: ${e.message}`
+            }
         }
+    }));
 
-    });
+    //Only report 500 if all requests failed. Otherwise the users must look in the details.
+    //TODO: use countErrors;
+    const overallResponseData = generateBatchResponseMessageAndStatus(countErrors, setFile.length);
 
-    if(insertErrors.length > 0) {
-        return new Response(
-            JSON.stringify({ 
-                error: `Error inserting cards into set "${setId}".`,
-                errorList: insertErrors 
-            }),
-            { status: 500 }
-        );
-    }
-    else {
-        return new Response("Cards were successfully inserted", { status: 200 });
-    }
+    return new Response(
+        JSON.stringify({
+            setId: setId,
+            message: overallResponseData.message,
+            errorCount: countErrors,
+            details: responses
+        }),
+        { status: overallResponseData.status } 
+    );
 }
 
 async function createSetIfNotExists(setId: string, setName: string) {

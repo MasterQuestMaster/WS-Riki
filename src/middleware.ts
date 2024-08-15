@@ -17,12 +17,17 @@ export const onRequest = defineMiddleware((context, next) => {
         // If a basic auth header is present, it wil take the string form: "Basic authValue"
         const authHeader = context.request.headers.get("Authorization");
         if (!authHeader || authHeader != import.meta.env.RIKI_INTERNAL_API_KEY) {
-            return new Response("API key required", {
-                status: 401,
-                headers: {
-                    "WWW-authenticate": 'Basic realm="Secure Area"',
-                },
-            });
+            return new Response(
+                JSON.stringify({
+                    message: authHeader ? "API key required" : "API key invalid"
+                }),
+                {
+                    status: 401,
+                    headers: {
+                        "WWW-authenticate": 'Basic realm="Secure Area"',
+                    },
+                }
+            );
         }
     }
 
