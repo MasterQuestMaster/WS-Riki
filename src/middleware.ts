@@ -14,12 +14,19 @@ export const onRequest = defineMiddleware((context, next) => {
     context.locals.message = "Message from Middleware";
     
     if(context.url.pathname.startsWith(INTERNAL_API_PATH)) {
-        // If a basic auth header is present, it wil take the string form: "Basic authValue"
+
         const authHeader = context.request.headers.get("Authorization");
-        if (!authHeader || authHeader != import.meta.env.RIKI_INTERNAL_API_KEY) {
+        const localApiKey = import.meta.env.RIKI_INTERNAL_API_KEY;
+
+        if (!authHeader || authHeader != localApiKey) {
+
+            let message = "API key invalid";
+            if(!authHeader) message = "API key required";
+            if(!localApiKey) message = "Local API key not set";
+
             return new Response(
                 JSON.stringify({
-                    message: authHeader ? "API key required" : "API key invalid"
+                    message: message
                 }),
                 {
                     status: 401,
