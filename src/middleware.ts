@@ -12,6 +12,8 @@ export const onRequest = defineMiddleware((context, next) => {
     //TODO: Install an Astro Cloudflare Pages test app to see what it contains that we don't have.
 
     context.locals.message = "Message from Middleware";
+    //const runtime = context.locals.runtime;
+    //console.log(runtime.env.RIKI_INTERNAL_API_KEY);
     
     if(context.url.pathname.startsWith(INTERNAL_API_PATH)) {
 
