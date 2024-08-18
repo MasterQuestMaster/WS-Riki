@@ -3,12 +3,11 @@ import type { APIRoute } from 'astro'
 
 import { getDbCardFromJson } from '@scripts/import/wsdb-eng-import';
 import { SetFileSchema } from 'src/schemas/SetFile';
-import { generateBatchResponseMessageAndStatus } from '@scripts/utils';
+import { generateBatchResponseMessageAndStatus, makeJsonResponse } from '@scripts/utils';
 
 /*
 set endpoint is for importing set details.
 This "cards" endpoint is for getting or importing cards for a set (from a JSON).
-
 */
 
 export const GET: APIRoute = async ({params}) => {
@@ -18,22 +17,19 @@ export const GET: APIRoute = async ({params}) => {
     const set = await db.select().from(Set).where(eq(Set.id, setId)).get();
 
     if(!set) {
-        return new Response(
-            JSON.stringify({ error: `Set ${setId} does not exist` }),
-            { status: 404 }
-        );
+        console.log("get in set/xxx/cards");
+        return makeJsonResponse({
+            message: `Set ${setId} does not exist` 
+        }, 404);
     }
 
     //Load the cards for the set.
     const cards = await db.select().from(Card).where(eq(Card.setId, setId));
 
-    return new Response(
-        JSON.stringify(cards),
-    )
+    return makeJsonResponse(cards, 200);
 }
 
-//TODO: Handle special rarities in normal set files by inserting them in a "alternate versions" table instead.
-//Or put them in the same table (for easier finding) but group them together in search results (show picture of the matching one).
+//TODO: Handle special rarities in normal set files by putting them in the same table (for easier finding) but group them together in search results (show picture of the matching one).
 
 export const POST: APIRoute = async ({params, request}) => {
     const setId = params.setid ?? "";
@@ -42,13 +38,10 @@ export const POST: APIRoute = async ({params, request}) => {
     const setFileParse = SetFileSchema.safeParse(await request.json());
 
     if(!setFileParse.success) {
-        return new Response(
-            JSON.stringify({
-                setId: setId,
-                message: setFileParse.error 
-            }),
-            { status: 400 }
-        );
+        return makeJsonResponse({
+            setId: setId,
+            message: setFileParse.error 
+        }, 400);
     }
 
     const setFile = setFileParse.data;
@@ -58,13 +51,10 @@ export const POST: APIRoute = async ({params, request}) => {
         await createSetIfNotExists(setId, setName);
     }
     catch(e: any) {
-        return new Response(
-            JSON.stringify({ 
-                setId: setId,
-                message: `Error when creating set "${setId}": ${e.message}` 
-            }),
-            { status: 500 }
-        );
+        return makeJsonResponse({ 
+            setId: setId,
+            message: `Error when creating set "${setId}": ${e.message}` 
+        }, 500);
     }
 
     let countErrors = 0;
@@ -72,7 +62,7 @@ export const POST: APIRoute = async ({params, request}) => {
     const responses = await Promise.all(setFile.map(async (card) => {
         try {
             await db.insert(Card).values([ 
-                await getDbCardFromJson(card) 
+                await getDbCardFromJson(card, setId) 
             ]).onConflictDoUpdate({
                 target: Card.id,
                 set: {
@@ -120,15 +110,12 @@ export const POST: APIRoute = async ({params, request}) => {
     //TODO: use countErrors;
     const overallResponseData = generateBatchResponseMessageAndStatus(countErrors, setFile.length);
 
-    return new Response(
-        JSON.stringify({
-            setId: setId,
-            message: overallResponseData.message,
-            errorCount: countErrors,
-            details: responses
-        }),
-        { status: overallResponseData.status } 
-    );
+    return makeJsonResponse({
+        setId: setId,
+        message: overallResponseData.message,
+        errorCount: countErrors,
+        details: responses
+    }, overallResponseData.status);
 }
 
 async function createSetIfNotExists(setId: string, setName: string) {

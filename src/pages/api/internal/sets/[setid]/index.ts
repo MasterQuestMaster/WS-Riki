@@ -1,5 +1,6 @@
 import { db, eq, Set, Card, count } from 'astro:db'
 import type { APIRoute } from 'astro'
+import { makeJsonResponse } from '@scripts/utils';
 
 export const GET: APIRoute = async ({locals, params}) => {
     // load set data from json and return it (only info, no cards)
@@ -20,14 +21,12 @@ export const GET: APIRoute = async ({locals, params}) => {
             .groupBy(Set.id)
             .get();
             
-        return new Response(
-            JSON.stringify(setResult)
-        )
+        return makeJsonResponse(setResult, 200);
     }
     catch(e: any) {
-        return new Response(
-            JSON.stringify({ error: `Failed to load set data for ${e.message}`}),
-            { status: 500 }
-        );
+        return makeJsonResponse({ 
+            setId: setId,
+            message: `Failed to load set data for ${setId}: ${e.message}`
+        }, 500);
     }
 }
