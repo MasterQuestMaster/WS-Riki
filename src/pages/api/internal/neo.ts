@@ -1,12 +1,13 @@
 import { db, sql, NeoStandard, count } from 'astro:db';
 import type { APIRoute } from 'astro';
 import { NeoStandardsSchema } from 'src/schemas/NeoStandards';
-import { generateBatchResponseMessageAndStatus } from '@scripts/utils';
+import { generateBatchResponseMessageAndStatus, makeJsonResponse } from '@scripts/api-utils';
+import { ZodErrorResponse } from '@scripts/api-utils';
 
 export const GET: APIRoute = async () => {
     //{id,title,codes[]} format.
     const neoStandards = await db.select().from(NeoStandard);
-    return new Response(JSON.stringify(neoStandards));
+    return makeJsonResponse(neoStandards, 200);
 }
 
 export const POST: APIRoute = async ({params, request}) => {
@@ -17,10 +18,7 @@ export const POST: APIRoute = async ({params, request}) => {
     const neoParse = NeoStandardsSchema.safeParse(await request.json());
 
     if(!neoParse.success) {
-        return new Response(
-            JSON.stringify({ message: neoParse.error }),
-            { status: 400 }
-        );
+        return ZodErrorResponse("NeoStandards", neoParse.error);
     }
 
     const neoList = neoParse.data;
@@ -63,11 +61,9 @@ export const POST: APIRoute = async ({params, request}) => {
 
     const overallResponseData = generateBatchResponseMessageAndStatus(countErrors, neoList.length);
 
-    return new Response(
-        JSON.stringify({
-            message: overallResponseData.message,
-            details: responses
-        }),
-        { status: overallResponseData.status } 
-    );
+    return makeJsonResponse({
+        message: overallResponseData.message,
+        status: overallResponseData.status,
+        details: responses
+    }, overallResponseData.status); 
 }

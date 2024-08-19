@@ -3,7 +3,8 @@ import type { APIRoute } from 'astro'
 
 import { getDbCardFromJson } from '@scripts/import/wsdb-eng-import';
 import { SetFileSchema } from 'src/schemas/SetFile';
-import { generateBatchResponseMessageAndStatus, makeJsonResponse } from '@scripts/utils';
+import { generateBatchResponseMessageAndStatus, makeJsonResponse, SetNotFoundResponse, SetReadErrorResponse, ZodErrorResponse } from '@scripts/api-utils'
+import { getSet } from '@scripts/db-utils';
 
 /*
 set endpoint is for importing set details.
@@ -13,20 +14,26 @@ This "cards" endpoint is for getting or importing cards for a set (from a JSON).
 export const GET: APIRoute = async ({params}) => {
     // load set data from json and return it (only info, no set)
     const setId = params.setid ?? "";
-    //Get set to check if it exists
-    const set = await db.select().from(Set).where(eq(Set.id, setId)).get();
 
-    if(!set) {
-        console.log("get in set/xxx/cards");
-        return makeJsonResponse({
-            message: `Set ${setId} does not exist` 
-        }, 404);
+    try {
+        const set = await getSet(setId);
+        if(!set) return SetNotFoundResponse(setId);
+    }
+    catch(e: any) {
+        return SetReadErrorResponse(e.message, setId);
     }
 
-    //Load the cards for the set.
-    const cards = await db.select().from(Card).where(eq(Card.setId, setId));
-
-    return makeJsonResponse(cards, 200);
+    try {
+        //Load the cards for the set.
+        const cards = await db.select().from(Card).where(eq(Card.setId, setId));
+        return makeJsonResponse(cards, 200);
+    }
+    catch(e: any) {
+        return makeJsonResponse({
+            status: 500,
+            message: `Error reading cards of set ${setId}: ${e.message}`
+        }, 500);
+    }
 }
 
 //TODO: Handle special rarities in normal set files by putting them in the same table (for easier finding) but group them together in search results (show picture of the matching one).
@@ -38,14 +45,12 @@ export const POST: APIRoute = async ({params, request}) => {
     const setFileParse = SetFileSchema.safeParse(await request.json());
 
     if(!setFileParse.success) {
-        return makeJsonResponse({
-            setId: setId,
-            message: setFileParse.error 
-        }, 400);
+        return ZodErrorResponse("SetFile", setFileParse.error, {setId: setId});
     }
 
     const setFile = setFileParse.data;
 
+    //Create set if it doesn't exist.
     try {
         const setName = setFile.length == 0 ? setId : setFile[0].expansion;
         await createSetIfNotExists(setId, setName);
@@ -53,6 +58,7 @@ export const POST: APIRoute = async ({params, request}) => {
     catch(e: any) {
         return makeJsonResponse({ 
             setId: setId,
+            status: 500,
             message: `Error when creating set "${setId}": ${e.message}` 
         }, 500);
     }
@@ -112,6 +118,7 @@ export const POST: APIRoute = async ({params, request}) => {
 
     return makeJsonResponse({
         setId: setId,
+        status: overallResponseData.status,
         message: overallResponseData.message,
         errorCount: countErrors,
         details: responses

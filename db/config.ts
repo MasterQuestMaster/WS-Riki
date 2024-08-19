@@ -7,7 +7,8 @@ const Set = defineTable({
     name: column.text(), //Batman Ninja
     shortName: column.text({optional: true}),
     type: column.text({optional: true}), //Booster Pack, Extra Booster, Trial Deck, Promo
-    releaseDate: column.date({optional: true})
+    releaseDate: column.date({optional: true}),
+    sha: column.text({optional: true}) //JSON set file compare value
   }
 });
 //TODO: Maybe we need a column for the title codes.

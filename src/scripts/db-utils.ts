@@ -1,4 +1,4 @@
-import { db, sql, Card, Set } from 'astro:db';
+import { db, sql, Card, Set, NeoStandard, eq } from 'astro:db';
 import { type Column } from 'drizzle-orm';
 
 /**
@@ -31,6 +31,7 @@ export function getColumnFromString(columnStr: string): Column {
 export function getTableFromName(tableName: string) {
     if(tableName == "Card") return Card;
     if(tableName == "Set") return Set;
+    if(tableName == "NeoStandard") return NeoStandard;
     return null;
 }
 
@@ -78,4 +79,13 @@ export function selectCardSetCols() {
         setName: Set.name,
         releaseDate: Set.releaseDate
     });
+}
+
+/**
+ * Get a set record from the Set table by its ID.
+ * @param setId ID of the set
+ * @returns Set DB record
+ */
+export function getSet(setId: string) {
+    return db.select().from(Set).where(eq(Set.id, setId)).get();
 }

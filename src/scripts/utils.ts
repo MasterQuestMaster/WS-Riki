@@ -89,21 +89,3 @@ export function range(start: number, stop: number, step = 1):number[] {
         .fill(start)
         .map((x, y) => x + y * step)
 }
-
-export function generateBatchResponseMessageAndStatus(batchErrorCount: number, batchTotal: number) {
-    if(batchErrorCount == 0) 
-        return {
-            status: 200,
-            message: `All ${batchTotal} items were successfully inserted/updated`
-        };
-    else if(batchErrorCount == batchTotal)
-        return { 
-            status: 500,
-            message: `All ${batchTotal} items failed to insert/update.`
-        };
-    else
-        return {
-            status: 500,
-            message: `${batchTotal - batchErrorCount} items were successfully inserted/updated, while ${batchErrorCount} of ${batchTotal} items failed.`
-        };
-}
