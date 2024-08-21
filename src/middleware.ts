@@ -17,6 +17,8 @@ export const onRequest = defineMiddleware((context, next) => {
     
     if(context.url.pathname.startsWith(INTERNAL_API_PATH)) {
 
+        return next();
+
         const authHeader = context.request.headers.get("Authorization");
         const localApiKey = import.meta.env.RIKI_INTERNAL_API_KEY;
 
