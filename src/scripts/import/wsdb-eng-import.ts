@@ -2,10 +2,13 @@ import { getTagsFromCardText } from "./categorizer";
 import { db, like, NeoStandard } from "astro:db";
 import {type SetFileEntry } from "src/schemas/SetFile";
 
-export async function getDbCardFromJson(card: SetFileEntry) {
+export async function getDbCardFromJson(card: SetFileEntry, setId: string) {
+    //Most empty values in the JSON files are either "" or "-". We want to remove those.
+    const emptyOrDash = (val: string) => (val == "" || val == "-");
+
     const dbCard = {
         //Replace special chars with underscores to form card id.
-        id: card.code.replaceAll(/[^a-zA-Z0-9]/, "_"),
+        id: card.code.replace(/[^a-zA-Z0-9]/g, "_"),
         cardno: card.code,
         titleCode: card.set,
         name: card.name,
@@ -13,21 +16,21 @@ export async function getDbCardFromJson(card: SetFileEntry) {
         color: card.color,
         rarity: card.rarity,
         neo: await getNeoStandardIdFromTitle(card.set),
-        //W + 103
-        setId: card.side + card.sid,
+        //We can't use side+release since some card are outliers (Haruhi Swing)
+        setId: setId,
         side: card.side,
-        level: toNumber(nullIfEmpty(card.level)),
-        cost: toNumber(nullIfEmpty(card.cost)),
-        power: toNumber(nullIfEmpty(card.power)),
+        level: toNumber(nullIf(card.level, emptyOrDash)),
+        cost: toNumber(nullIf(card.cost, emptyOrDash)),
+        power: toNumber(nullIf(card.power, emptyOrDash)),
         //soul is the only number (0 default) so to check null, we check for card type.
         soul: card.type != "Character" ? null : card.soul,
         trigger: nullIfEmptyArray(card.trigger),
         //traits are "-" in JSON if empty.
-        traits: nullIfEmptyArray(removeEmpty(card.attributes, "-")),
+        traits: nullIfEmptyArray(removeIf(card.attributes, emptyOrDash)),
         abilities: nullIfEmptyArray(card.ability),
         //copy of abilities with generic trait placeholders for wildcard searching
         abilities_ph: nullIfEmptyArray(card.ability.map(abl => placeholderizeTraits(abl))),
-        flavor: nullIfEmpty(card.flavor_text),
+        flavor: nullIf(card.flavor_text, emptyOrDash),
         //tags should be done afterwards
         tags: null,
         icons: nullIfEmptyArray(getIcons(card.ability)),
@@ -36,12 +39,13 @@ export async function getDbCardFromJson(card: SetFileEntry) {
 
     dbCard.tags = getTagsFromCardText(dbCard);
 
+    //console.log("DB Card", dbCard);
     return dbCard;
 }
 
-//make a string null if it's empty.
-function nullIfEmpty(value: string) {
-    return value === "" ? null : value;
+//make a string null if it's a specified value.
+function nullIf(value: string, shouldNull: (val: string) => boolean) {
+    return shouldNull(value) ? null : value;
 }
 
 //make an array null if it's empty.
@@ -53,16 +57,16 @@ function toNumber(value: string|null) {
     return value == null ? null : parseInt(value);
 }
 
-//remove empty strings and "-" from arrays.
-function removeEmpty(array: string[], additionalEmptyChar: string) {
-    return array.filter(item => item !== "" && item !== additionalEmptyChar);
+//remove specified values from array.
+function removeIf(array: string[], shouldRemove: (val: string) => boolean) {
+    return array.filter(item => !shouldRemove(item));
 }
 
 //Replace traits with generic versions to aid in generic trait search.
 function placeholderizeTraits(abilityText: string) {
     //this does not work correctly with SAO cards that mention cards with《》in name in their text.
     //But the effort does not justify excluding those.
-    return abilityText.replaceAll(/《 .*?》/, "《TRAIT》");
+    return abilityText.replace(/《.*?》/g, "《TRAIT》");
 }
 
 //extract which icons are used from the ability text
@@ -89,6 +93,6 @@ async function getNeoStandardIdFromTitle(titleCode: string) {
     }
     catch {
         console.error(`Import: Failed to load Neo-Standards for ${titleCode}.`);
-        return [titleCode];
+        return [];
     }
 }
