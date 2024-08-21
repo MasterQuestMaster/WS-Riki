@@ -52,7 +52,8 @@ export const POST: APIRoute = async ({params, request}) => {
 
     //Create set if it doesn't exist.
     try {
-        const setName = setFile.length == 0 ? setId : setFile[0].expansion;
+        //Some sets have a Promo with "PR Card (Weiss Side)" in first slot (also Haruhi PUP), so find a non-promo.
+        const setName = setFile.find(set => set.rarity != "PR")?.expansion ?? setId;
         await createSetIfNotExists(setId, setName);
     }
     catch(e: any) {

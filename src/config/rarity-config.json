@@ -3,36 +3,40 @@
         "name": "Trial Deck",
         "order": 1
     },
+    "N":{
+        "name": "Normal",
+        "order": 2
+    },
     "C":{
         "name": "Common",
-        "order": 2
+        "order": 3
     },
     "U":{
         "name": "Uncommon",
-        "order": 3
+        "order": 4
     },
     "CC":{
         "name": "Climax Common",
-        "order": 4
+        "order": 5
     },
     "CR":{
         "name": "Climax Rare",
-        "order": 5 
+        "order": 6 
     },
     "R":{
         "name": "Rare",
-        "order": 6
+        "order": 7
     },
     "PR":{
         "name": "Promo Rare",
-        "order": 7
+        "order": 8
     },
     "RR":{
         "name": "Double Rare",
-        "order": 8
+        "order": 9
     },
     "RR+":{
         "name": "Double Rare+",
-        "order": 9
+        "order": 10
     }
 }
