@@ -3,17 +3,6 @@ import { defineMiddleware } from "astro:middleware";
 const INTERNAL_API_PATH = "/api/internal/"
 
 export const onRequest = defineMiddleware((context, next) => {
-
-    //TODO: We must also check whether we're trying to access an internal API route.
-
-    //accessing environment variables works differently for cloudflare.
-    //We're supposed to be able to access the env with context.locals.runtime but it doesn't work.
-    //Maybe we must install wrangler and the other cloudflare stuff.
-    //TODO: Install an Astro Cloudflare Pages test app to see what it contains that we don't have.
-
-    context.locals.message = "Message from Middleware";
-    //const runtime = context.locals.runtime;
-    //console.log(runtime.env.RIKI_INTERNAL_API_KEY);
     
     if(context.url.pathname.startsWith(INTERNAL_API_PATH)) {
 
