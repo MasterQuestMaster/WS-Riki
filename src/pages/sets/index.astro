@@ -4,14 +4,22 @@ import SearchHeader from "@layouts/SearchHeader.astro";
 import SearchControls from "@components/header/SearchControls.astro";
 import SetDisplayOptions from "@components/header/SetDisplayOptions.astro";
 
-import { db, Set } from 'astro:db';
+import { db, Set, Card, eq, count } from 'astro:db';
 import { format } from 'date-fns';
 
 const type = Astro.url.searchParams.get("type") ?? "";
 const order = Astro.url.searchParams.get("order") ?? "rarity";
 const dir = Astro.url.searchParams.get("dir") ?? "asc";
 
-const sets = await db.select().from(Set);
+const sets = await db.select({
+        id: Set.id,
+        name: Set.name,
+        type: Set.type,
+        releaseDate: Set.releaseDate,
+        cardCount: count(Card.id)
+    }).from(Set)
+    .leftJoin(Card, eq(Card.setId, Set.id))
+    .groupBy(Set.id);
 
 ---
 <MainLayout>
@@ -24,25 +32,52 @@ const sets = await db.select().from(Set);
 
     {/* TODO: The footer should still be at the bottom even if the main is empty. */}
     <main>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Released</th>
-                </tr>
-            </thead>
-            <tbody>
-                { sets.map(set => 
+        <div class="flex-list-wrapper">
+            <table class="set-list">
+                <thead>
                     <tr>
-                        <td><a href={"/sets/" + set.id}>{set.name}</a></td>
-                        <td>{set.releaseDate && format(set.releaseDate, "yyyy-MM-dd")}</td>
-                    </tr>)}
-            </tbody>
-        </table>
+                        <th>Name</th>
+                        <th>Cards</th>
+                        <th>Type</th>
+                        <th>Released</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    { sets.map(set =>
+                        <tr>
+                            <td><a href={"/sets/" + set.id}>{set.name}</a></td>
+                            <td>{set.cardCount}</td>
+                            <td>{set.type}</td>
+                            <td>{set.releaseDate && format(set.releaseDate, "yyyy-MM-dd")}</td>
+                        </tr>)}
+                </tbody>
+            </table>
+        </div>
     </main>
 </MainLayout>
 
 <style>
+    .set-list {
+        font-size: 14px;
+        width: 100%;
+        min-width: 768px;
+        max-width: 1000px;
+        line-height: 20px;
+        margin: 20px 0 20px 0;
+        table-layout: fixed;
+        border-collapse: collapse;
+        border-spacing: 0;
+
+        & th {
+            text-align: left;
+        }
+
+        & tr {
+            border-bottom: 1px solid #E0DEE3;
+            cursor: pointer;
+        }
+    }
+
     .set-count {
         margin-right: 10px;
     }

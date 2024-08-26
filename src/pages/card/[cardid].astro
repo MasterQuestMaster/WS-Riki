@@ -1,15 +1,22 @@
 ---
+//TODO: [ERROR] Astro DB Error: SQL_QUERY_FAILED: SQL input error: no such column: Card.titleCode
+//Maybe build astro remote. But Cloudflare should already do that?
+//Astro Studio DB is definitely out of date.
+//We need to set up a Github CI action to push our schema changes when we commit to main.
+//Otherwise each automatic push may break the site.
+// https://docs.astro.build/en/guides/astro-db/#set-up-the-github-ci-action 
 import MainLayout from '@layouts/MainLayout.astro';
 import SearchHeader from '@layouts/SearchHeader.astro';
-
-import { db, eq, Card, Set } from 'astro:db';
-import { toPascal } from 'src/scripts/utils';
-import { dbarray } from 'src/scripts/db-utils';
-import { getTriggerInfo } from '@scripts/trigger';
-import { Icon } from 'astro-icon/components';
 import TraitBox from '@components/TraitBox.astro';
 import ColorIndicator from '@components/ColorIndicator.astro';
 import AbilityText from '@components/AbilityText.astro';
+
+import { toPascal } from 'src/scripts/utils';
+import { dbarray } from 'src/scripts/db-utils';
+import { getTriggerInfo } from '@scripts/trigger';
+
+import { db, eq, Card, Set } from 'astro:db';
+import { Icon } from 'astro-icon/components';
 
 const { cardid = "" } = Astro.params;
 console.log(cardid);
@@ -32,7 +39,7 @@ const set = selectCardResult.Set;
 const soulTrigger = getTriggerInfo(["soul"])[0];
 
 ---
-{/* CX imagages are upright by default, by the same image with (H) appended from ws-tcg is horizontal.
+{/* CX images are upright by default, but the same image with (H) appended from ws-tcg is horizontal.
 
 When formatting ability text, do the following:
 - make traits have a link to a search that searches for all characters with that trait.

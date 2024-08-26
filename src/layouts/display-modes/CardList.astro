@@ -19,7 +19,7 @@ const cardTypes: Record<string,string> = {
 };
 
 ---
-<div class="list-wrapper">
+<div class="flex-list-wrapper">
     <table class="card-list">
         <thead>
             <tr>
@@ -119,16 +119,6 @@ const cardTypes: Record<string,string> = {
 </script>
 
 <style>
-    .list-wrapper {
-        display: flex;
-        flex-flow: column nowrap;
-        margin: 0 auto;
-        max-width: 1000px;
-        overflow-x: auto;
-        scrollbar-gutter: stable;
-        position: relative;
-        width: 100%;
-    }
 
     .card-list {
         font-size: 14px;

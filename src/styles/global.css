@@ -31,7 +31,19 @@ a {
     align-items: center;
 }
 
-/* common controls */
+.flex-list-wrapper {
+    display: flex;
+    flex-flow: column nowrap;
+    margin: 0 auto;
+    max-width: 1000px;
+    overflow-x: auto;
+    scrollbar-gutter: stable;
+    position: relative;
+    width: 100%;
+}
+
+/* Common Controls */
+
 .button {
     font-family: "Lato", "Helvetica Neue", Arial, Helvetica, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     display: flex;
