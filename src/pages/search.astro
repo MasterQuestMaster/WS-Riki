@@ -18,7 +18,7 @@ import { stringifySearchToken, objectMap } from "@scripts/utils";
 import { selectCardSetCols } from "@scripts/db-utils";
 
 import parserConfig from "src/config/parser-config.json";
-import displayConfig from "src/config/display-config.json";
+import optionConfig from "src/config/display-option-config.json";
 
 //URL Parameters
 const query = Astro.url.searchParams.get("q");
@@ -30,7 +30,7 @@ const lastPage = 2; //TODO: get this from DB query somehow.
 
 //Perform a runtime check for the default value, since TS convert is only compile time.
 let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() ?? "";
-if(!Object.hasOwn(displayConfig, displayFormat)) {
+if(!optionConfig.displayAs.find(disp => disp.value == displayFormat)) {
     displayFormat = "image";
 }
 

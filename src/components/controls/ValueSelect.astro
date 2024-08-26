@@ -1,0 +1,24 @@
+---
+interface Props {
+    name:string,
+    label:string,
+    value?:string,
+    defaultValue?:string,
+    showLabel?:boolean,
+    options: {
+        value: string,
+        label: string
+    }[]
+}
+
+const {name, label, defaultValue="", value, showLabel=false, options, ...props} = Astro.props;
+
+---
+<label>
+    <span class={ showLabel ? "" : "visually-hidden" }>{label}</span>
+    <select {name} {...props}>
+        {options.map(option =>
+            <option value={option.value} selected={option.value==value}>{option.label}</option>
+        )}
+    </select>
+</label>

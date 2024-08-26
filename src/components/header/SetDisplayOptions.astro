@@ -1,8 +1,6 @@
 ---
-//import TypeSelect from '@component'
-import TypeSelect from '@components/controls/TypeSelect.astro';
-import OrderSelect from '@components/controls/OrderSelect.astro';
-import DirectionSelect from '@components/controls/DirectionSelect.astro';
+import ValueSelect from '@components/controls/ValueSelect.astro';
+import optionConfig from "src/config/display-option-config.json";
 
 interface Props {
     type: string;
@@ -15,24 +13,16 @@ const {type, order, dir} = Astro.props;
 ---
 <div class="flex-row-start" data-display-options>
     <span class="type-filter">
-        <TypeSelect name="type" value={type} />
+        <ValueSelect name="type" label="Type" value={type} showLabel={true} options={optionConfig.setType} />
     </span>
-    <OrderSelect name="order" value={order} />
-    <DirectionSelect name="dir" value={dir} />
+
+    <ValueSelect name="order" label="Order" value={order} defaultValue="date" options={optionConfig.setOrder} />
+    <ValueSelect name="dir" label="Direction" value={dir} defaultValue="asc" options={optionConfig.sortDirection} />
 </div>
 
 <script>
     //Scripts is only executed once, even if the component is included multiple times, so add once for all instances.
-    document.querySelectorAll("[data-display-options]").forEach((container) => {
-        const typeSelect = container.querySelector("[name=type]");
-        typeSelect?.addEventListener("change", changeUrlParams);
-
-        const orderSelect = container.querySelector("[name=order]");
-        orderSelect?.addEventListener("change", changeUrlParams);
-
-        const directionSelect = container.querySelector("[name=dir]");
-        directionSelect?.addEventListener("change", changeUrlParams);
-    });
+    document.querySelectorAll("[data-display-options] select").forEach((sel) => sel.addEventListener("change", changeUrlParams));
 
     function changeUrlParams(this:HTMLSelectElement) {
         const urlParams = new URLSearchParams(window.location.search);

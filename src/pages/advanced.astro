@@ -2,16 +2,15 @@
 import MainLayout from "@layouts/MainLayout.astro";
 import SearchHeader from "@layouts/SearchHeader.astro";
 import FormRow from "@layouts/FormRow.astro";
-
-import NumberOperator from "@components/controls/NumberOperator.astro";
 import ToggleSwitch from "@components/controls/ToggleSwitch.astro";
+import MinMaxFilter from "@components/controls/MinMaxFilter.astro";
+import ValueSelect from "@components/controls/ValueSelect.astro";
+
+import { getDistinctArrayColValues } from "src/scripts/db-utils";
+import optionConfig from "src/config/display-option-config.json";
 
 import { db, Card, Set as SetTable } from "astro:db";
 
-import { getDistinctArrayColValues } from "src/scripts/db-utils";
-import OrderSelect from "@components/controls/OrderSelect.astro";
-import DisplaySelect from "@components/controls/DisplaySelect.astro";
-import MinMaxFilter from "@components/controls/MinMaxFilter.astro";
 
 //If any post data exists, we convert the post data to a query string. Then we redirect to /search with that string.
 function processFormDataKey(data: FormData, key: string) {
@@ -231,8 +230,10 @@ console.log(tags);
                     </fieldset>
                 </FormRow>
                 <FormRow label="Preferences">
-                    <DisplaySelect name="as" />
-                    <OrderSelect name="order" />
+                    <ValueSelect name="as" label="Display" defaultValue="image" options={optionConfig.displayAs} />
+                    <ValueSelect name="order" label="Order" defaultValue="name" options={optionConfig.cardOrder} />
+                    <!--<DisplaySelect name="as" />
+                    <OrderSelect name="order" /> -->
                 </FormRow>
                 <FormRow label="" sticky>
                     <input class="search-btn" type="submit" value="Search with these options" />

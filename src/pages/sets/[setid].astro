@@ -10,7 +10,7 @@ import type ListCardModel from 'src/models/ListCardModel';
 
 import { db, eq, Card, Set } from 'astro:db';
 
-import displayConfig from "src/config/display-config.json";
+import optionConfig from "src/config/display-option-config.json";
 import rarityConfig from "src/config/rarity-config.json";
 import { formatDate } from 'src/scripts/utils';
 import { selectCardSetCols } from 'src/scripts/db-utils';
@@ -20,8 +20,8 @@ const order = Astro.url.searchParams.get("order") ?? "rarity";
 const dir = Astro.url.searchParams.get("dir") ?? "asc";
 
 //Display Format: Perform a runtime check for the default value, since TS convert is only compile time.
-let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() as keyof typeof displayConfig ?? "";
-if(!Object.hasOwn(displayConfig, displayFormat)) {
+let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() ?? "";
+if(!optionConfig.displayAs.find(disp => disp.value == displayFormat) ) {
     displayFormat = "image";
 }
 
