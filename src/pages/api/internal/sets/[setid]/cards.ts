@@ -2,7 +2,7 @@ import { db, eq, sql, Set, Card } from 'astro:db'
 import type { APIRoute } from 'astro'
 
 import { getDbCardFromJson } from '@scripts/import/wsdb-eng-import';
-import { SetFileSchema } from 'src/schemas/SetFile';
+import { SetFileSchema, type SetFileEntry } from 'src/schemas/SetFile';
 import { generateBatchResponseMessageAndStatus, makeJsonResponse, SetNotFoundResponse, SetReadErrorResponse, ZodErrorResponse } from '@scripts/api-utils'
 import { getSet } from '@scripts/db-utils';
 
@@ -39,7 +39,7 @@ export const GET: APIRoute = async ({params}) => {
 //TODO: Handle special rarities in normal set files by putting them in the same table (for easier finding) but group them together in search results (show picture of the matching one).
 
 export const POST: APIRoute = async ({params, request}) => {
-    const setId = params.setid ?? "";
+    const setId = "W999"; //params.setid ?? "";
     
     //Validate POST body (should be a JSON file from WS-EN-DB).
     const setFileParse = SetFileSchema.safeParse(await request.json());
@@ -51,6 +51,7 @@ export const POST: APIRoute = async ({params, request}) => {
     const setFile = setFileParse.data;
 
     //Create set if it doesn't exist.
+    /*
     try {
         //Some sets have a Promo with "PR Card (Weiss Side)" in first slot (also Haruhi PUP), so find a non-promo.
         const setName = setFile.find(set => set.rarity != "PR")?.expansion ?? setId;
@@ -63,8 +64,42 @@ export const POST: APIRoute = async ({params, request}) => {
             message: `Error when creating set "${setId}": ${e.message}` 
         }, 500);
     }
+    */
 
-    let countErrors = 0;
+    //let countErrors = 0;
+
+    //TODO: Use batch insert because Cloudflare limits subrequests to 50 requests.
+    //Even with batch requests, we will have trouble importing all sets at once.
+    //We have to find out the exact timeframe of the limit and then wait.
+
+    const insertRowValues = await Promise.all(setFile.map(async (card: SetFileEntry) => await getDbCardFromJson(card, setId)));
+    const insertResponse = await db.insert(Card).values(insertRowValues).onConflictDoUpdate({
+        target: Card.id,
+        set: {
+            titleCode: sql`excluded.titleCode`,
+            name: sql`excluded.name`,
+            type: sql`excluded.type`,
+            color: sql`excluded.color`,
+            rarity: sql`excluded.rarity`,
+            neo: sql`excluded.neo`,
+            setId: sql`excluded.setId`,
+            side: sql`excluded.side`,
+            level: sql`excluded.level`,
+            cost: sql`excluded.cost`,
+            power: sql`excluded.power`,
+            soul: sql`excluded.soul`,
+            trigger: sql`excluded.trigger`,
+            traits: sql`excluded.traits`,
+            abilities: sql`excluded.abilities`,
+            abilities_ph: sql`excluded.abilities_ph`,
+            icons: sql`excluded.icons`,
+            image: sql`excluded.image`
+        }
+    });
+
+    console.log(insertResponse);
+
+    /*
 
     const responses = await Promise.all(setFile.map(async (card) => {
         try {
@@ -113,8 +148,11 @@ export const POST: APIRoute = async ({params, request}) => {
         }
     }));
 
+    */
+
     //Only report 500 if all requests failed. Otherwise the users must look in the details.
     //TODO: use countErrors;
+    const countErrors = setFile.length - insertResponse.rowsAffected;
     const overallResponseData = generateBatchResponseMessageAndStatus(countErrors, setFile.length);
 
     return makeJsonResponse({
@@ -122,7 +160,7 @@ export const POST: APIRoute = async ({params, request}) => {
         status: overallResponseData.status,
         message: overallResponseData.message,
         errorCount: countErrors,
-        details: responses
+        details: insertResponse
     }, overallResponseData.status);
 }
 
