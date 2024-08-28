@@ -1,30 +1,6 @@
 import type { ZodError } from "astro/zod";
 
 /**
- * Generate overall status and message fora batch operation, based on success rate.
- * @param batchErrorCount Number of errors
- * @param batchTotal Total number of items
- * @returns Status code and message, according to the success rate.
- */
-export function generateBatchResponseMessageAndStatus(batchErrorCount: number, batchTotal: number) {
-    if(batchErrorCount == 0) 
-        return {
-            status: 200, /* 200: OK */
-            message: `All ${batchTotal} items were successfully inserted/updated`
-        };
-    else if(batchErrorCount == batchTotal)
-        return { 
-            status: 500, /* 500: Internal Server error */
-            message: `All ${batchTotal} items failed to insert/update.`
-        };
-    else
-        return {
-            status: 207, /* 207: Multi-Status */
-            message: `${batchTotal - batchErrorCount} items were successfully inserted/updated, while ${batchErrorCount} of ${batchTotal} items failed.`
-        };
-}
-
-/**
  * Generate a response with "application/json" type.
  * @param jsonObject Response body
  * @param statusCode HTTP status code of the response

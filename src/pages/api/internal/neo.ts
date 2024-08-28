@@ -1,8 +1,7 @@
-import { db, sql, NeoStandard, count } from 'astro:db';
+import { db, sql, NeoStandard } from 'astro:db';
 import type { APIRoute } from 'astro';
 import { NeoStandardsSchema } from 'src/schemas/NeoStandards';
-import { generateBatchResponseMessageAndStatus, makeJsonResponse } from '@scripts/api-utils';
-import { ZodErrorResponse } from '@scripts/api-utils';
+import { makeJsonResponse, ZodErrorResponse } from '@scripts/api-utils';
 
 export const GET: APIRoute = async () => {
     //{id,title,codes[]} format.
@@ -22,48 +21,35 @@ export const POST: APIRoute = async ({params, request}) => {
     }
 
     const neoList = neoParse.data;
-    let countErrors = 0;
-    
-    const responses = await Promise.all(neoList.map(async neo => {
-        try {
-            await db.insert(NeoStandard)
-                .values([{
-                    id: neo.codes[0],
-                    title: neo.title,
-                    codes: neo.codes
-                }])
-                .onConflictDoUpdate({
-                    target: NeoStandard.id,
-                    set: {
-                        title: sql`excluded.title`,
-                        codes: sql`excluded.codes`
-                    }
-                });
 
-            return {
-                title: neo.title,
-                codes: neo.codes,
-                status: 200,
-                message: `The Neo Standard ${neo.title} was successfully inserted/updated.`
-            };
-        }
-        catch(e:any) {
-            countErrors++;
+    try {
+        const insertRowValues = neoList.map(neo => ({
+            id: neo.codes[0],
+            title: neo.title,
+            codes: neo.codes
+        }));
 
-            return {
-                title: neo.title,
-                codes: neo.codes,
-                status: 500,
-                message: `Error inserting/updating Neo-Standard "${neo.title}": ${e.message}`
-            };
-        }
-    }))
+        const insertedRows = await db.insert(NeoStandard)
+        .values(insertRowValues)
+        .onConflictDoUpdate({
+            target: NeoStandard.id,
+            set: {
+                title: sql`excluded.title`,
+                codes: sql`excluded.codes`
+            }
+        }).returning();
 
-    const overallResponseData = generateBatchResponseMessageAndStatus(countErrors, neoList.length);
-
-    return makeJsonResponse({
-        message: overallResponseData.message,
-        status: overallResponseData.status,
-        details: responses
-    }, overallResponseData.status); 
+        return makeJsonResponse({
+            message: "All Neo Standards were successfully imported",
+            status: 200,
+            count: insertedRows.length,
+            details: insertedRows,
+        }, 200); 
+    }
+    catch(e: any) {
+        return makeJsonResponse({
+            message: `Error inserting Neo Standards ${e.message}`,
+            status: 500,
+        }, 500); 
+    }
 }
