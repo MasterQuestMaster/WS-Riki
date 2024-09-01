@@ -1,5 +1,6 @@
-import { db, sql, Card, Set, NeoStandard, eq } from 'astro:db';
-import { type Column } from 'drizzle-orm';
+import { db, sql, Card, Set, NeoStandard, eq, asc, desc } from 'astro:db';
+import { type SQL } from 'drizzle-orm';
+import { type SQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 /**
  * Converts a column name into the actual column instance.
@@ -7,7 +8,7 @@ import { type Column } from 'drizzle-orm';
  * @param columnStr Column name (Format "Table.column")
  * @returns AstroDB Column instance
  */
-export function getColumnFromString(columnStr: string): Column {
+export function getColumnFromString(columnStr: string): SQLiteColumn {
     const [tableName,columnName] = columnStr.split(".");
     const table = getTableFromName(tableName);
 
@@ -20,7 +21,7 @@ export function getColumnFromString(columnStr: string): Column {
     }
 
     const column = columnName as keyof typeof table;
-    return table[column] as Column;
+    return table[column] as SQLiteColumn;
 }
 
 /**
@@ -49,8 +50,8 @@ export function dbarray(value: any):string[] {
  * @param column a JSON-type DB column containing a string array.
  * @returns an array of all distinct single values of the column.
  */
-export async function getDistinctArrayColValues(column: Column) {
-    return db.selectDistinct({value: sql`json_each.value`}).from(sql`${column.table},json_each(${column})`); // as Promise<{value:string}[]>;
+export async function getDistinctArrayColValues(column: SQLiteColumn) {
+    return db.selectDistinct({value: sql`json_each.value`}).from(sql`${column.table},json_each(${column})`);
 }
 
 /**
@@ -88,4 +89,23 @@ export function selectCardSetCols() {
  */
 export function getSet(setId: string) {
     return db.select().from(Set).where(eq(Set.id, setId)).get();
+}
+
+/**
+ * Generate an array of sorting information by parsing the provided config object and keys.
+ * @param colConfig Config section from order config file.
+ * @param orderKey Name of the column config.
+ * @param dir asc/desc sorting
+ * @param defaultSort always used as secondary condition
+ * @returns Array to be used with drizzle "orderBy" func.
+ */
+export function getOrderConfig(colConfig: {[key:string]: {dbColumn:string}}, orderKey: string, dir: string, defaultSort: SQL | SQLiteColumn) {  
+    if(colConfig[orderKey]) {
+        const orderCol = getColumnFromString(colConfig[orderKey].dbColumn);
+        const dirFunc = (dir == "desc") ? desc : asc;
+        return [ dirFunc(orderCol), defaultSort ];
+    }
+    else {
+        return [ defaultSort ];
+    }
 }

@@ -10,27 +10,27 @@ import PaginationOptions from "@components/header/PaginationOptions.astro";
 import type GridCardModel from "src/models/GridCardModel";
 import type ListCardModel from "src/models/ListCardModel";
 
-import { db, Card, Set, eq } from 'astro:db';
+import { db, Card, Set, eq, asc } from 'astro:db';
 import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "@scripts/parser/queryParser";
 import { DrizzleParser, type IKeywordOptions as DrizzleKeywordOptions } from "@scripts/parser/drizzleParser";
 import { stringifyLogicTree, getSingleToken } from "@scripts/parser/logicGroup";
-import { stringifySearchToken, objectMap } from "@scripts/utils";
-import { selectCardSetCols } from "@scripts/db-utils";
+import { stringifySearchToken } from "@scripts/utils";
+import { selectCardSetCols, getOrderConfig } from "@scripts/db-utils";
 
-import parserConfig from "src/config/parser-config.json";
-import optionConfig from "src/config/display-option-config.json";
+import parserConfig from "src/config/parser-config.json"
+import orderConfig from "src/config/order-config.json";
 
 //URL Parameters
 const query = Astro.url.searchParams.get("q");
-const order = Astro.url.searchParams.get("order") ?? "set";
-const dir = Astro.url.searchParams.get("dir") ?? "asc";
+const order = Astro.url.searchParams.get("order");
+const dir = Astro.url.searchParams.get("dir") ?? "asc"; //TODO: needs the same default value treatment as displayFormat. Zod schema?
 const page = parseInt(Astro.url.searchParams.get("page") ?? "1");
 const pageSize = parseInt(Astro.url.searchParams.get("count") ?? "60");
 const lastPage = 2; //TODO: get this from DB query somehow.
 
 //Perform a runtime check for the default value, since TS convert is only compile time.
-let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() ?? "";
-if(!optionConfig.displayAs.find(disp => disp.value == displayFormat)) {
+let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase();
+if(displayFormat !== "image" && displayFormat !== "list") {
     displayFormat = "image";
 }
 
@@ -66,6 +66,12 @@ if(singleToken?.type == "expression" && singleToken.keyword == "set") {
 //     return isSetKeyword && drizzleParser.statistics.keywordUsage[key];
 // });
 
+//TODO: Change rarity order. Even if some rarities are technically between others, it looks bad to put them there.
+//Like CC/CR between U and R
+
+//always order by Card No. as 2nd for consistency within broad orderings.
+const orderCols = getOrderConfig(orderConfig.Card, order ?? "", dir, Card.cardno);
+
 //IMPORTANT: The result structure changes if we include a join.
 //It becomes {Card:{id,name,...},Set:{id,name,...}}.
 //We can avoid this by specifying all the columns in the Select.
@@ -73,7 +79,25 @@ if(singleToken?.type == "expression" && singleToken.keyword == "set") {
 const results = await selectCardSetCols()
     .from(Card)
     .innerJoin(Set, eq(Set.id, Card.setId))
-    .where(drizzleFilterParams);
+    .where(drizzleFilterParams)
+    .orderBy(...orderCols); 
+
+    //Order: 
+    //1. maybe standarize order/sort terminology
+    //2. use a separate config fine to define columns for order
+    //   like parse-config with getColFromString
+    //   so we don't have the col names in the client-side select values.
+    //   and we can have multiple sort columns this way.
+    //3. Sort by CardNo as second column always to have consistency even with releaseDate or Rarity Sorts.
+    //4. Rarity sort needs its own DB table with the order column. Else we can't use it in Query.
+    //5. Not only rarity, but all col vals that shouldn't be alphabetical.
+    //   Color sorting, and set sorting (since it should display W12 before W101).
+    //   Set sorting can be handled with a multi-sort between set number and secondary "W/S".
+    //   We could have separate columns in card for rarity/color sorting, but that requires updating each card
+    //   if we change the way we sort rarities / colors.
+    //5. Maybe do all the pagination and order client-side? That way we wouldn't need so many DB requests.
+    //   We would also know total count. But load would be longer for first page.
+    //   And we would need client-side components, i.e. React or Svelte, meaning more time learning.
 
 //If the Set table is in the WHERE or in the SELECT, join it.
 // if(usedSetKeywords.length > 0 || currentDisplayConfig.join?.includes("Set")) {

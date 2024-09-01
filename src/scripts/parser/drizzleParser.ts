@@ -1,6 +1,7 @@
 import { eq, ne, gt, gte, lt, lte, like, and, or, isNull, isNotNull, sql, not} from 'astro:db';
 
-import { type Column, type SQL } from 'drizzle-orm';
+import { type SQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { SQL } from 'drizzle-orm';
 
 import type { SearchToken, KeywordType } from "./queryParser";
 import { type LogicTree, negateLogicTree } from "./logicGroup";
@@ -123,7 +124,7 @@ export class DrizzleParser {
     }
 
     private generateExpression(
-        column:Column, 
+        column:SQLiteColumn, 
         operator: string, 
         value: string|null, 
         type:"string"|"number"|"array",
@@ -199,13 +200,13 @@ function tokenNegator(token:SearchToken) {
 }
 
 //If negate is specified, apply not, but also include null rows.
-function maybeNegate(expression: SQL, nullColumn: Column, isNegated:boolean) {
+function maybeNegate(expression: SQL, nullColumn: SQLiteColumn, isNegated:boolean) {
     //For non-nullable column, we use a regular not().
     if(isNegated && nullColumn.notNull) return not(expression);
     if(isNegated) return or(not(expression), isNull(nullColumn));
     return expression;
 }
 
-function lower(value: Column|string) {
+function lower(value: SQLiteColumn|string) {
     return sql`lower(${value})`;
 }
