@@ -1,0 +1,43 @@
+---
+import { toPascal } from '@scripts/utils';
+
+interface Props {
+    color: string;
+}
+
+const {color} = Astro.props;
+/*  TODO: Easier color-blind access with a letter maybe */
+---
+<div class:list={["color-indicator",color.toLowerCase()]} 
+    title={toPascal(color)} 
+    aria-label={toPascal(color)}>
+
+    <span>{color.charAt(0).toUpperCase()}</span>
+
+</div>
+
+<style>
+    .color-indicator {
+        display: inline-block;
+        border: 1px solid #898989; 
+        border-radius: .25em;
+        width: 1.25em;
+        height: 1em;
+
+        &.red {
+            background-color: #ed3b2c;
+        }
+
+        &.blue {
+            background-color: #0094d6;
+        }
+
+        &.green {
+            background-color: #03b146;
+        }
+
+        &.yellow {
+            background-color: #faed00;
+        }
+    }
+</style>

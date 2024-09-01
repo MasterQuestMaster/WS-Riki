@@ -8,7 +8,7 @@
 import MainLayout from '@layouts/MainLayout.astro';
 import SearchHeader from '@layouts/SearchHeader.astro';
 import TraitBox from '@components/TraitBox.astro';
-import ColorIndicator from '@components/ColorIndicator.astro';
+import ColorIndicatorSquare from '@components/ColorIndicatorSquare.astro';
 import AbilityText from '@components/AbilityText.astro';
 
 import { toPascal } from 'src/scripts/utils';
@@ -89,7 +89,7 @@ When formatting ability text, do the following:
                         <a class="set-name" href={`/sets/${set.id}`}>{set.name}</a>
                     </div>
                     <div class="type-line">
-                        <ColorIndicator color={card.color} />
+                        <ColorIndicatorSquare color={card.color} />
                         <span class="card-type">{card.type}</span>
                     </div>
                     <div class="abilities">
