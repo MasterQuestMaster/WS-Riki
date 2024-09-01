@@ -1,6 +1,6 @@
 ---
 import ValueSelect from "@components/controls/ValueSelect.astro";
-import optionConfig from "src/config/display-option-config.json";
+import orderConfig from "src/config/order-config.json";
 
 interface Props {
     displayFormat: string;
@@ -10,11 +10,22 @@ interface Props {
 
 const {displayFormat, order, dir} = Astro.props;
 
+//Transform the card order settings into an array of value/label.
+const cardOrderOptions = Object.entries(orderConfig.Card).map(([key, entry]) => ({value: key, label: entry.label}));
+
 ---
 <div class="flex-row-start" data-display-options>
-    <ValueSelect name="as" label="Display" value={displayFormat} defaultValue="image" options={optionConfig.displayAs} />
-    <ValueSelect name="order" label="Order" value={order} defaultValue="name" options={optionConfig.cardOrder} />
-    <ValueSelect name="dir" label="Direction" value={dir} defaultValue="asc" options={optionConfig.sortDirection} />
+    <ValueSelect name="as" label="Display" value={displayFormat} defaultValue="image" options={[
+        { "value": "image", "label": "Display as Images" },
+        { "value": "list", "label": "Display as List" }
+    ]} />
+
+    <ValueSelect name="order" label="Order" value={order} defaultValue="name" options={cardOrderOptions} />
+
+    <ValueSelect name="dir" label="Direction" value={dir} defaultValue="asc" options={[
+        { "value": "asc", "label": "Asc" },
+        { "value": "desc", "label": "Desc" }
+    ]} />
 </div>
 
 <script>

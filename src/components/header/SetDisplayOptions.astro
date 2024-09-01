@@ -1,6 +1,6 @@
 ---
 import ValueSelect from '@components/controls/ValueSelect.astro';
-import optionConfig from "src/config/display-option-config.json";
+import orderConfig from "src/config/order-config.json";
 
 interface Props {
     type: string;
@@ -10,14 +10,27 @@ interface Props {
 
 const {type, order, dir} = Astro.props;
 
+//Transform the card order settings into an array of value/label.
+const setOrderOptions = Object.entries(orderConfig.Set).map(([key, entry]) => ({value: key, label: entry.label}));
+
 ---
 <div class="flex-row-start" data-display-options>
     <span class="type-filter">
-        <ValueSelect name="type" label="Type" value={type} showLabel={true} options={optionConfig.setType} />
+        <ValueSelect name="type" label="Type" value={type} showLabel={true} options={[
+            { "value": "", "label": "Any"},
+            { "value": "Booster Pack", "label": "Booster Pack" },
+            { "value": "Trial Deck", "label": "Trial Deck" },
+            { "value": "Premium Booster", "label": "Premium Booster" },
+            { "value": "Extra Booster", "label": "Extra Booster" }
+        ]} />
     </span>
 
-    <ValueSelect name="order" label="Order" value={order} defaultValue="date" options={optionConfig.setOrder} />
-    <ValueSelect name="dir" label="Direction" value={dir} defaultValue="asc" options={optionConfig.sortDirection} />
+    <ValueSelect name="order" label="Order" value={order} defaultValue="date" options={setOrderOptions} />
+
+    <ValueSelect name="dir" label="Direction" value={dir} defaultValue="asc" options={[
+        { "value": "asc", "label": "Asc" },
+        { "value": "desc", "label": "Desc" }
+    ]} />
 </div>
 
 <script>

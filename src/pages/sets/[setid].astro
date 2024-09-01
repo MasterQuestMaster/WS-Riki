@@ -10,7 +10,6 @@ import type ListCardModel from 'src/models/ListCardModel';
 
 import { db, eq, Card, Set } from 'astro:db';
 
-import optionConfig from "src/config/display-option-config.json";
 import rarityConfig from "src/config/rarity-config.json";
 import { formatDate } from 'src/scripts/utils';
 import { selectCardSetCols } from 'src/scripts/db-utils';
@@ -20,8 +19,9 @@ const order = Astro.url.searchParams.get("order") ?? "rarity";
 const dir = Astro.url.searchParams.get("dir") ?? "asc";
 
 //Display Format: Perform a runtime check for the default value, since TS convert is only compile time.
-let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase() ?? "";
-if(!optionConfig.displayAs.find(disp => disp.value == displayFormat) ) {
+//TODO: Maybe use zod for this (can transform on parse, and constrict to certain values)
+let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase();
+if(displayFormat !== "image" && displayFormat !== "list" ) {
     displayFormat = "image";
 }
 
@@ -40,6 +40,9 @@ if(!set) {
 const cards = await selectCardSetCols().from(Card)
     .innerJoin(Set, eq(Set.id, Card.setId))
     .where(eq(Card.setId, set.id));
+
+//This way (function to display them) only works because this is the unpaginated set overview.
+//For search, we need to use the actual order by.
 
 //take a result array, group it by rarity, then group the rarity by order defined in config.
 function groupBySortedRarity(cardList: typeof cards) {
@@ -60,8 +63,8 @@ function groupBySortedRarity(cardList: typeof cards) {
         <div class="inner-flex">
           <div class="set-header-title">
               <h1>{set.name}</h1>        
-              <p>{set.type} &mdash; {cards.length}&nbsp;cards</p>
-              <p>Released&nbsp;{set.releaseDate ? formatDate(set.releaseDate) : "-"}</p>
+              <p>{set.type ?? "Unknown Type"} &mdash; {cards.length}&nbsp;cards</p>
+              <p>{set.releaseDate ? `Released&nbsp;${formatDate(set.releaseDate)}` : "Unknown release date"}</p>
           </div>
 
           <DisplayOptions {displayFormat} {order} {dir} />
