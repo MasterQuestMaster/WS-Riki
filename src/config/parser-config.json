@@ -34,11 +34,11 @@
             "dbColumn": "Card.color",
             "forceExactMatches": true,
             "valueMapping": {
-                "r": "red",
-                "g": "green",
-                "b": "blue",
-                "y": "yellow",
-                "p": "purple"
+                "red": "r",
+                "green": "g",
+                "blue": "b",
+                "yellow": "y",
+                "purple": "p"
             }
         },
         "rarity": {

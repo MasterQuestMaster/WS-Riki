@@ -19,10 +19,11 @@ import { selectCardSetCols, getOrderConfig } from "@scripts/db-utils";
 
 import parserConfig from "src/config/parser-config.json"
 import orderConfig from "src/config/order-config.json";
+import { Rarity, Color } from "astro:db";
 
 //URL Parameters
 const query = Astro.url.searchParams.get("q");
-const order = Astro.url.searchParams.get("order");
+const order = Astro.url.searchParams.get("order") ?? "";
 const dir = Astro.url.searchParams.get("dir") ?? "asc"; //TODO: needs the same default value treatment as displayFormat. Zod schema?
 const page = parseInt(Astro.url.searchParams.get("page") ?? "1");
 const pageSize = parseInt(Astro.url.searchParams.get("count") ?? "60");
@@ -70,15 +71,38 @@ if(singleToken?.type == "expression" && singleToken.keyword == "set") {
 //Like CC/CR between U and R
 
 //always order by Card No. as 2nd for consistency within broad orderings.
-const orderCols = getOrderConfig(orderConfig.Card, order ?? "", dir, Card.cardno);
+const orderCols = getOrderConfig(orderConfig.Card, order, dir, Card.cardno);
 
 //IMPORTANT: The result structure changes if we include a join.
 //It becomes {Card:{id,name,...},Set:{id,name,...}}.
 //We can avoid this by specifying all the columns in the Select.
 
-const results = await selectCardSetCols()
+const results = await db.select({
+        id: Card.id,
+        cardno: Card.cardno,
+        name: Card.name,
+        type: Card.type,
+        color: Card.color,
+        colorName: Color.name,
+        rarity: Card.rarity,
+        rarityName: Rarity.name,
+        side: Card.side,
+        level: Card.level,
+        cost: Card.cost,
+        power: Card.power,
+        soul: Card.soul,
+        trigger: Card.trigger,
+        traits: Card.traits,
+        image: Card.image,
+        icons: Card.icons,
+        setName: Set.name,
+        releaseDate: Set.releaseDate
+    })
     .from(Card)
     .innerJoin(Set, eq(Set.id, Card.setId))
+    .innerJoin(Rarity, eq(Rarity.id, Card.rarity)) //we need to consider unknown rarities (like MDR). Either we insert all rarities, or we have "other" and lose the info.
+    //or we don't use foreign key and have a left join. 
+    .innerJoin(Color, eq(Color.id, Card.color))
     .where(drizzleFilterParams)
     .orderBy(...orderCols); 
 

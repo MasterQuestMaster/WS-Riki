@@ -1,12 +1,82 @@
-import { db, Card, Set } from 'astro:db';
+import { db, Card, Set, Rarity, Color } from 'astro:db';
 
 // https://astro.build/db/seed
 export default async function seed() {
 	
 	await db.insert(Set).values([
-		{id:"SE26", name: "Sword Art Online II Vol. 2", shortName:"SAO2V2", type:"Extra Booster", releaseDate: new Date("2016-05-27")},
-		{id:"S106", name: "SPY x FAMILY", type: "Booster Pack", releaseDate: new Date("2024-01-26") },
-		{id:"S92", name: "Tokyo Revengers", type: "Booster Pack", releaseDate: new Date("July 29, 2022")}
+		{id: "SE26", name: "Sword Art Online II Vol. 2", shortName:"SAO2V2", type:"Extra Booster", releaseDate: new Date("2016-05-27")},
+		{id: "S106", name: "SPY x FAMILY", type: "Booster Pack", releaseDate: new Date("2024-01-26") },
+		{id: "S92", name: "Tokyo Revengers", type: "Booster Pack", releaseDate: new Date("July 29, 2022")}
+	]);
+
+	//TODO: add foil rarities.
+
+	//Set-specific rarities:
+	//MDR (Maid Dragon Rare)
+	//HYR (Hanayome Rare)
+	//PXR (Pixar Rare)
+	//DCR (Deculture Rare)
+	//AVGR (Avenger Rare) (probably SEC, > MR)
+	// MR (Marvel Rare)
+
+	let i=1;
+
+	await db.insert(Rarity).values([
+		//base rarities
+		{id: "CC", name: "Climax Common", order: 10*i++},
+		{id: "CR", name: "Climax Rare", order: 10*i++},
+		{id: "TD", name: "Trial Deck", order: 10*i++},
+		{id: "N", name: "Normal", order: 10*i++},
+		{id: "C", name: "Common", order: 10*i++},
+		{id: "U", name: "Uncommon", order: 10*i++},
+		{id: "R", name: "Rare", order: 10*i++},
+		{id: "RR", name: "Double Rare", order: 10*i++},
+		{id: "RR+", name: "Double Rare+", order: 10*i++},
+		{id: "PR", name: "Promo Rare", order: 10*i++},
+		{id: "SR", name: "Super Rare", order: 10*i++},
+
+		//set-specific rarities with 1 guaranteed per pack (they have the same sort priority).
+		{id: "FP", name: "School idol festival Parallel", order: 10*i},
+		{id: "JJR", name: "JoJo Rare", order: 10*i},
+		{id: "HLP", name: "hololive Parallel", order: 10*i},
+		{id: "IGP", name: "Itsutsugo Parallel", order: 10*i},
+		{id: "DCR", name: "Deculture Rare", order: 10*i},
+		{id: "SHP", name: "Shana Parallel", order: 10*i},
+		{id: "BDR", name: "BanG Dream Rare", order: 10*i++},
+
+		//Special Rarities higher than set-specific rarities
+		{id: "RRR", name: "Triple Rare", order: 10*i++},
+		{id: "OFR", name: "Over Frame Rare", order: 10*i++},
+
+		//Set-specific SP rarities
+		{id: "MR", name: "Marvel Rare", order: 10*i},
+		{id: "PXR", name: "Pixar Rare", order: 10*i},
+		{id: "LRR", name: "LycoReco Rare", order: 10*i},
+		{id: "SPYR", name: "Spy Rare", order: 10*i},
+		{id: "ATR", name: "Avatar Rare", order: 10*i},
+		{id: "HYR", name: "Hanayome Rare", order: 10*i},
+		{id: "DSR", name: "Deadly Sin Rare", order: 10*i},
+		{id: "MDR", name: "Maid Dragon Rare", order: 10*i},
+		{id: "TRV", name: "Tokyo Revengers", order: 10*i},
+		{id: "RTR", name: "Round Table Rare", order: 10*i},
+		{id: "RBR", name: "RWBY Rare", order: 10*i++},
+
+		{id: "SP", name: "Special", order: 10*i++},
+		{id: "SSP", name: "Super Special", order: 10*i++},
+
+		//Set-specific SEC rarities
+		{id: "AVGR", name: "Avengers Rare", order: 10*i},
+		{id: "LUXO", name: "Luxo Rare", order: 10*i},
+		{id: "CSMR", name: "Chainsaw Man Rare", order: 10*i++},
+
+		{id: "SEC", name: "Secret", order: 10*i++}
+	]);
+
+	await db.insert(Color).values([
+		{id: "Y", name: "Yellow", order: 1},
+		{id: "G", name: "Green", order: 2},
+		{id: "R", name: "Red", order: 3},
+		{id: "B", name: "Blue", order: 4}
 	]);
 
 	await db.insert(Card).values([
@@ -16,7 +86,7 @@ export default async function seed() {
 			titleCode: "SPY",
 			name: "Telepath Girl, Anya",
 			type: "Character",
-			color: "YELLOW",
+			color: "Y",
 			rarity: "RR",
 			neo: ["SPY"],
 			setId: "S106",
@@ -47,7 +117,7 @@ export default async function seed() {
 			titleCode: "SAO",
 			name: "《Zekken》 Yuuki",
 			type: "Character",
-			color: "GREEN",
+			color: "G",
 			rarity: "R",
 			neo: ["SAO"],
 			setId: "SE26",
@@ -75,7 +145,7 @@ export default async function seed() {
 			titleCode: "SAO",
 			name: "Demise of 《Zekken》",
 			type: "Climax",
-			color: "YELLOW",
+			color: "Y",
 			rarity: "C",
 			neo: ["SAO"],
 			setId: "SE26",

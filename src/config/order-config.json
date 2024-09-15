@@ -14,11 +14,11 @@
         },
         "rarity": {
             "label": "Sort by Rarity",
-            "dbColumn": "Card.rarity"
+            "dbColumn": "Rarity.order"
         },
         "color": {
             "label": "Sort by Color",
-            "dbColumn": "Card.color"
+            "dbColumn": "Color.order"
         },
         "level": {
             "label": "Sort by Level",

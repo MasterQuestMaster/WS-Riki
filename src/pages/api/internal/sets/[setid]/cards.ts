@@ -1,4 +1,4 @@
-import { db, eq, sql, Set as SetTable, Card } from 'astro:db'
+import { db, eq, sql, Set as SetTable, Card, Rarity } from 'astro:db'
 import type { APIRoute } from 'astro'
 
 import { getDbCardFromJson, getNeoStandardsInSetFile } from '@scripts/import/wsdb-eng-import';
@@ -53,7 +53,7 @@ export const POST: APIRoute = async ({params, request}) => {
     //Create set if it doesn't exist.
     try {
         //Some sets have a Promo with "PR Card (Weiss Side)" in first slot (also Haruhi PUP), so find a non-promo.
-        const setName = setFile.find(set => set.rarity != "PR")?.expansion ?? setId;
+        const setName = setFile.find(card => card.rarity != "PR")?.expansion ?? setId;
         await createSetIfNotExists(setId, setName);
     }
     catch(e: any) {
@@ -64,13 +64,16 @@ export const POST: APIRoute = async ({params, request}) => {
         }, 500);
     }
 
-    //TODO: Use batch insert because Cloudflare limits subrequests to 50 requests.
-    //Even with batch requests, we will have trouble importing all sets at once.
-    //We have to find out the exact timeframe of the limit and then wait.
-
-    //Inside GetDBCard, we call NeoStandard table, which is 1 more call per card.
-    //We should get all Neo-Standard entries in advance and then reference them.
-    //For special codes, like Fujimi F**, we must check with wildcard (only lowercase allowed for *, so we don't false-positive FGO).
+    try {
+        await insertNewRarities(setFile);
+    }
+    catch(e: any) {
+        return makeJsonResponse({ 
+            setId: setId,
+            status: 500,
+            message: `Error when creating set "${setId}": ${e.message}` 
+        }, 500);
+    }
 
     try {
         //Find all title codes and get their neo standards
@@ -130,4 +133,10 @@ async function createSetIfNotExists(setId: string, setName: string) {
         id: setId,
         name: setName,
     }).onConflictDoNothing();
+}
+
+async function insertNewRarities(setFile: SetFileEntry[]) {
+    const usedRarities = [...new Set(setFile.map(card => card.rarity))];
+    const rarityInsertData = usedRarities.map(rar => ({id: rar, name: null, order: null}));
+    await db.insert(Rarity).values(rarityInsertData).onConflictDoNothing();
 }

@@ -1,7 +1,6 @@
 ---
 import ColorIndicator from '@components/ColorIndicator.astro';
 import type ListCardModel from 'src/models/ListCardModel';
-import { toPascal } from '@scripts/utils';
 
 //Use a special interface instead of cardmodel because we only select limited columns.
 import rarityConfig from "src/config/rarity-config.json";
@@ -51,7 +50,7 @@ const cardTypes: Record<string,string> = {
                     </td>
                     <td class="center">
                         <a href={"/card/" + card.id} tabindex="-1">
-                            <abbr title={toPascal(card.color)}><ColorIndicator color={card.color} /></abbr>
+                            <abbr title={card.colorName}><ColorIndicator color={card.color} /></abbr>
                         </a>
                     </td>
                     <td class="center">
@@ -61,7 +60,7 @@ const cardTypes: Record<string,string> = {
                     </td>
                     <td class="center">
                         <a href={"/card/" + card.id} tabindex="-1">
-                            <abbr title={rarityConfig[card.rarity as keyof typeof rarityConfig].name ?? card.rarity}>{card.rarity}</abbr>
+                            <abbr title={card.rarityName}>{card.rarity}</abbr>
                         </a>
                     </td>
                     <td>

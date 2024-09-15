@@ -1,4 +1,4 @@
-import { db, sql, Card, Set, NeoStandard, eq, asc, desc } from 'astro:db';
+import { db, sql, Card, Set, NeoStandard, Color, Rarity, eq, asc, desc } from 'astro:db';
 import { type SQL } from 'drizzle-orm';
 import { type SQLiteColumn } from 'drizzle-orm/sqlite-core';
 
@@ -33,6 +33,8 @@ export function getTableFromName(tableName: string) {
     if(tableName == "Card") return Card;
     if(tableName == "Set") return Set;
     if(tableName == "NeoStandard") return NeoStandard;
+    if(tableName == "Color") return Color;
+    if(tableName == "Rarity") return Rarity;
     return null;
 }
 

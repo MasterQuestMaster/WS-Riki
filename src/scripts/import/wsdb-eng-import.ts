@@ -1,8 +1,8 @@
 import { getTagsFromCardText } from "./categorizer";
-import { db, like, NeoStandard, or } from "astro:db";
+import { db, NeoStandard, Rarity, eq, like, or } from "astro:db";
 import type { SetFileEntry } from "src/schemas/SetFile";
-import { NeoStandardsSchema, type NeoStandardEntry } from "src/schemas/NeoStandards";
-import type NeoStandardModel from "src/models/NeoStandardModel";
+import { NeoStandardDbSchema, type NeoStandardModel } from "src/schemas/NeoStandard";
+import { RarityDbSchema, type RarityModel } from "src/schemas/Rarity";
 
 /**
  * Transforms a card entry from the JSON file to a DB-ready row.
@@ -11,7 +11,7 @@ import type NeoStandardModel from "src/models/NeoStandardModel";
  * @param neoList List of Neo Standards used for this set
  * @returns Transformed Card object that can be inserted into the Card table.
  */
-export function getDbCardFromJson(card: SetFileEntry, setId: string, neoList: NeoStandardEntry[]) {
+export function getDbCardFromJson(card: SetFileEntry, setId: string, neoList: NeoStandardModel[]) {
     //Most empty values in the JSON files are either "" or "-". We want to remove those.
     const emptyOrDash = (val: string) => (val == "" || val == "-");
 
@@ -27,10 +27,10 @@ export function getDbCardFromJson(card: SetFileEntry, setId: string, neoList: Ne
         titleCode: card.set,
         name: card.name,
         type: card.type,
-        color: card.color,
+        color: card.color.substring(0,1).toUpperCase(), //First letter
         rarity: card.rarity,
-        //find 
-        neo: neoList.filter(neo => neo.codes.includes(card.set)),
+        //Filter NeoStandard List and get the IDs based on the set.
+        neo: getNeoStandards(card.set, neoList),
         //We can't use side+release since some card are outliers (Haruhi Swing)
         setId: setId,
         side: card.side,
@@ -63,7 +63,15 @@ export async function getNeoStandardsInSetFile(setFile: SetFileEntry[]): Promise
     const uniqueTitleCodes = [...new Set(setFile.map(card => card.set))];
     const likes = uniqueTitleCodes.map(code => like(NeoStandard.codes, `%"${code}"%`));
     const neoList = await db.select().from(NeoStandard).where(or(...likes));
-    return neoList as unknown as NeoStandardModel[];
+    return NeoStandardDbSchema.array().parse(neoList);
+}
+
+//Currently not used but could be useful later.
+export async function getRaritiesInSetFile(setFile: SetFileEntry[]): Promise<RarityModel[]> {
+    const uniqueRarities = [...new Set(setFile.map(card => card.rarity))];
+    const filter = uniqueRarities.map(rar => eq(Rarity.id, rar));
+    const rarityList = await db.select().from(Rarity).where(or(...filter));
+    return RarityDbSchema.array().parse(rarityList);
 }
 
 //make a string null if it's a specified value.
@@ -106,4 +114,14 @@ function getIcons(abilities: string[]) {
     }
 
     return icons;
+}
+
+function getNeoStandards(setId: string, neoList: NeoStandardModel[]) {
+    //Consider "F**" (Bunko) by replacing * with regex lowercase.
+    //Only if the ** is the only entry.
+    return neoList.filter(neo => 
+        (neo.codes.length == 1 && neo.codes[0].includes("*")) ? 
+            setId.match(neo.codes[0].replaceAll("*", "[a-z]")) : 
+            neo.codes.includes(setId) 
+    ).map(neo => neo.id);
 }
