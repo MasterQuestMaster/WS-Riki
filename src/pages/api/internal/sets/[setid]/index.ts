@@ -3,7 +3,7 @@ import type { APIRoute } from 'astro'
 
 import { getSet } from '@scripts/db-utils';
 import { makeJsonResponse, SetNotFoundResponse, SetReadErrorResponse, ZodErrorResponse } from '@scripts/api-utils';
-import { SetInfoSchema } from 'src/schemas/SetInfo';
+import { SetInputSchema, SetDbSchema } from 'src/schemas/Set';
 
 export const GET: APIRoute = async ({params}) => {
     // load set data from json and return it (only info, no cards)
@@ -23,13 +23,11 @@ export const PUT: APIRoute = async ({params, request}) => {
     const setId = params.setid ?? "";
 
     //Update Schema should not have "id" and everything should be optional.
-    const setUpdateParse = SetInfoSchema.omit({id: true}).partial().safeParse(await request.json());
+    const setUpdateParse = SetInputSchema.omit({id: true}).partial().safeParse(await request.json());
 
     if(!setUpdateParse.success) {
-        return ZodErrorResponse("SetInfo", setUpdateParse.error);
+        return ZodErrorResponse("SetInput", setUpdateParse.error);
     }
-
-    const setUpdateVals = setUpdateParse.data;
 
     //Get set to check if it exists
     try {
@@ -41,7 +39,7 @@ export const PUT: APIRoute = async ({params, request}) => {
     }
 
     try {
-
+        const setUpdateVals = SetDbSchema.omit({id: true}).partial().parse(setUpdateParse.data);
         //Set exists. Update based on the provided values.
         await db.update(Set).set(setUpdateVals).where(eq(Set.id, setId));
 

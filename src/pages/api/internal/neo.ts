@@ -1,6 +1,6 @@
 import { db, sql, NeoStandard } from 'astro:db';
 import type { APIRoute } from 'astro';
-import { NeoStandardsSchema } from 'src/schemas/NeoStandards';
+import { NeoStandardDbSchema, NeoStandardInputSchema } from 'src/schemas/NeoStandard';
 import { makeJsonResponse, ZodErrorResponse } from '@scripts/api-utils';
 
 export const GET: APIRoute = async () => {
@@ -14,20 +14,17 @@ export const POST: APIRoute = async ({params, request}) => {
     //Can be a partial json. only add/update.
 
     //Validate POST body (should be a JSON file from WS-EN-DB).
-    const neoParse = NeoStandardsSchema.safeParse(await request.json());
+    const neoParse = NeoStandardInputSchema.array().safeParse(await request.json());
 
     if(!neoParse.success) {
-        return ZodErrorResponse("NeoStandards", neoParse.error);
+        return ZodErrorResponse("NeoStandardInput", neoParse.error);
     }
 
     const neoList = neoParse.data;
 
     try {
-        const insertRowValues = neoList.map(neo => ({
-            id: neo.codes[0],
-            title: neo.title,
-            codes: neo.codes
-        }));
+        //Parse into DBSchema
+        const insertRowValues = neoList.map(neo => NeoStandardDbSchema.parse({ id: neo.codes[0], ...neo }));
 
         const insertedRows = await db.insert(NeoStandard)
         .values(insertRowValues)
