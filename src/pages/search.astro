@@ -100,8 +100,7 @@ const results = await db.select({
     })
     .from(Card)
     .innerJoin(Set, eq(Set.id, Card.setId))
-    .innerJoin(Rarity, eq(Rarity.id, Card.rarity)) //we need to consider unknown rarities (like MDR). Either we insert all rarities, or we have "other" and lose the info.
-    //or we don't use foreign key and have a left join. 
+    .innerJoin(Rarity, eq(Rarity.id, Card.rarity))
     .innerJoin(Color, eq(Color.id, Card.color))
     .where(drizzleFilterParams)
     .orderBy(...orderCols); 

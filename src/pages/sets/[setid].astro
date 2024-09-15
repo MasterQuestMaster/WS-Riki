@@ -8,7 +8,7 @@ import DisplayOptions from '@components/header/DisplayOptions.astro';
 import type GridCardModel from 'src/models/GridCardModel';
 import type ListCardModel from 'src/models/ListCardModel';
 
-import { db, eq, Card, Set } from 'astro:db';
+import { db, eq, Card, Set, Rarity, Color } from 'astro:db';
 
 import rarityConfig from "src/config/rarity-config.json";
 import { formatDate } from 'src/scripts/utils';
@@ -37,8 +37,30 @@ if(!set) {
 }
 
 //Join Set because we need SetName column for CardList.
-const cards = await selectCardSetCols().from(Card)
+const cards = await db.select({
+        id: Card.id,
+        cardno: Card.cardno,
+        name: Card.name,
+        type: Card.type,
+        color: Card.color,
+        colorName: Color.name,
+        rarity: Card.rarity,
+        rarityName: Rarity.name,
+        side: Card.side,
+        level: Card.level,
+        cost: Card.cost,
+        power: Card.power,
+        soul: Card.soul,
+        trigger: Card.trigger,
+        traits: Card.traits,
+        image: Card.image,
+        icons: Card.icons,
+        setName: Set.name,
+        releaseDate: Set.releaseDate
+    }).from(Card)
     .innerJoin(Set, eq(Set.id, Card.setId))
+    .innerJoin(Rarity, eq(Rarity.id, Card.rarity))
+    .innerJoin(Color, eq(Color.id, Card.color))
     .where(eq(Card.setId, set.id));
 
 //This way (function to display them) only works because this is the unpaginated set overview.
