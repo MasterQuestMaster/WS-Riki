@@ -7,23 +7,19 @@ import DisplayOptions from '@components/header/DisplayOptions.astro';
 
 import type GridCardModel from 'src/models/GridCardModel';
 import type ListCardModel from 'src/models/ListCardModel';
+import { CardOrderSchema, DisplayFormatSchema, SortDirectionSchema } from 'src/schemas/SearchParams';
 
 import { db, eq, Card, Set, Rarity, Color } from 'astro:db';
+import { getOrderConfig } from '@scripts/db-utils';
+import { formatDate } from '@scripts/utils';
 
-import rarityConfig from "src/config/rarity-config.json";
-import { formatDate } from 'src/scripts/utils';
-import { selectCardSetCols } from 'src/scripts/db-utils';
+import orderConfig from "src/config/order-config.json";
 
 
-const order = Astro.url.searchParams.get("order") ?? "rarity";
-const dir = Astro.url.searchParams.get("dir") ?? "asc";
-
-//Display Format: Perform a runtime check for the default value, since TS convert is only compile time.
-//TODO: Maybe use zod for this (can transform on parse, and constrict to certain values)
-let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase();
-if(displayFormat !== "image" && displayFormat !== "list" ) {
-    displayFormat = "image";
-}
+//URL Parameters
+const order = CardOrderSchema.catch("rarity").parse(Astro.url.searchParams.get("order")?.toLowerCase());
+const dir = SortDirectionSchema.catch("asc").parse(Astro.url.searchParams.get("dir")?.toLowerCase());
+const displayFormat = DisplayFormatSchema.catch("image").parse(Astro.url.searchParams.get("as")?.toLowerCase());
 
 //We don't join cards here so that we can show empty sets.
 const { setid = "" } = Astro.params;
@@ -35,6 +31,9 @@ if(!set) {
         statusText: 'Not found'
     });
 }
+
+//always order by Card No. as 2nd for consistency within broad orderings.
+const orderCols = getOrderConfig(orderConfig.Card, order, dir, Card.cardno);
 
 //Join Set because we need SetName column for CardList.
 const cards = await db.select({
@@ -61,21 +60,11 @@ const cards = await db.select({
     .innerJoin(Set, eq(Set.id, Card.setId))
     .innerJoin(Rarity, eq(Rarity.id, Card.rarity))
     .innerJoin(Color, eq(Color.id, Card.color))
-    .where(eq(Card.setId, set.id));
+    .where(eq(Card.setId, set.id))
+    .orderBy(...orderCols);
 
-//This way (function to display them) only works because this is the unpaginated set overview.
-//For search, we need to use the actual order by.
-
-//take a result array, group it by rarity, then group the rarity by order defined in config.
-function groupBySortedRarity(cardList: typeof cards) {
-    const groupedList = Object.groupBy(cardList, item => item.rarity);
-    //Extract the keys of the group by (the rarities)
-    return Object.entries(groupedList).sort(([keyA],[keyB]) => {
-        //get the order for the rarities from the config.
-        const orderA = rarityConfig[keyA as keyof typeof rarityConfig].order;
-        const orderB = rarityConfig[keyB as keyof typeof rarityConfig].order;
-        return orderA - orderB; 
-    });
+function groupByRarity(cardList: typeof cards) {
+    return Object.entries(Object.groupBy(cardList, card => card.rarityName ?? card.rarity));
 }
 
 ---
@@ -105,10 +94,10 @@ function groupBySortedRarity(cardList: typeof cards) {
                 return <CardGrid cards={cards as GridCardModel[]} />;
             }
             else {
-                return groupBySortedRarity(cards).map(([rarity, grpCards]) => 
+                return groupByRarity(cards).map(([rarity, grpCards]) => 
                     <Fragment>
                         <div class="set-section-header">
-                            <h2>{rarityConfig[rarity as keyof typeof rarityConfig].name}</h2>
+                            <h2>{rarity}</h2>
                             <hr/>
                         </div>
                         <CardGrid cards={grpCards as GridCardModel[]} />

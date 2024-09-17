@@ -9,31 +9,28 @@ import PaginationOptions from "@components/header/PaginationOptions.astro";
 
 import type GridCardModel from "src/models/GridCardModel";
 import type ListCardModel from "src/models/ListCardModel";
+import { QuerySchema, CardOrderSchema, SortDirectionSchema, DisplayFormatSchema,
+    PageNumberSchema, PageSizeSchema, TotalResultsSchema } from "src/schemas/SearchParams";
 
-import { db, Card, Set, eq, asc } from 'astro:db';
+import { db, eq, count, Card, Set, Rarity, Color } from 'astro:db';
 import { QueryParser, type IKeywordOptions as QueryKeywordOptions } from "@scripts/parser/queryParser";
 import { DrizzleParser, type IKeywordOptions as DrizzleKeywordOptions } from "@scripts/parser/drizzleParser";
 import { stringifyLogicTree, getSingleToken } from "@scripts/parser/logicGroup";
 import { stringifySearchToken } from "@scripts/utils";
-import { selectCardSetCols, getOrderConfig } from "@scripts/db-utils";
+import { getOrderConfig } from "@scripts/db-utils";
 
-import parserConfig from "src/config/parser-config.json"
+import parserConfig from "src/config/parser-config.json";
 import orderConfig from "src/config/order-config.json";
-import { Rarity, Color } from "astro:db";
+
 
 //URL Parameters
-const query = Astro.url.searchParams.get("q");
-const order = Astro.url.searchParams.get("order") ?? "";
-const dir = Astro.url.searchParams.get("dir") ?? "asc"; //TODO: needs the same default value treatment as displayFormat. Zod schema?
-const page = parseInt(Astro.url.searchParams.get("page") ?? "1");
-const pageSize = parseInt(Astro.url.searchParams.get("count") ?? "60");
-const lastPage = 2; //TODO: get this from DB query somehow.
-
-//Perform a runtime check for the default value, since TS convert is only compile time.
-let displayFormat = Astro.url.searchParams.get("as")?.toLowerCase();
-if(displayFormat !== "image" && displayFormat !== "list") {
-    displayFormat = "image";
-}
+const query = QuerySchema.parse(Astro.url.searchParams.get("q"));
+const order = CardOrderSchema.catch("set").parse(Astro.url.searchParams.get("order")?.toLowerCase());
+const dir = SortDirectionSchema.catch("asc").parse(Astro.url.searchParams.get("dir")?.toLowerCase());
+const displayFormat = DisplayFormatSchema.catch("image").parse(Astro.url.searchParams.get("as")?.toLowerCase());
+const page = PageNumberSchema.catch(1).parse(Astro.url.searchParams.get("page"));
+const pageSize = PageSizeSchema.catch(60).parse(Astro.url.searchParams.get("count"));
+let total = TotalResultsSchema.parse(Astro.url.searchParams.get("total"));
 
 //Parse the query into a LogicTree that can be processed further.
 const parser = new QueryParser(parserConfig.keywords as QueryKeywordOptions);
@@ -77,6 +74,16 @@ const orderCols = getOrderConfig(orderConfig.Card, order, dir, Card.cardno);
 //It becomes {Card:{id,name,...},Set:{id,name,...}}.
 //We can avoid this by specifying all the columns in the Select.
 
+//For pagination, we need to get the total row count, but we want to not execute this for every page.
+if(!total) {
+    const rowCountResult = await db.select({totalRows: count() }).from(Card).where(drizzleFilterParams).get();
+    total = rowCountResult?.totalRows ?? 0;
+    Astro.url.searchParams.set("total", `${total}`);
+}
+
+const lastPage = Math.ceil(total / pageSize);
+const offset = pageSize * (page - 1);
+
 const results = await db.select({
         id: Card.id,
         cardno: Card.cardno,
@@ -103,7 +110,9 @@ const results = await db.select({
     .innerJoin(Rarity, eq(Rarity.id, Card.rarity))
     .innerJoin(Color, eq(Color.id, Card.color))
     .where(drizzleFilterParams)
-    .orderBy(...orderCols); 
+    .limit(pageSize)
+    .offset(offset)
+    .orderBy(...orderCols);
 
     //Order: 
     //1. maybe standarize order/sort terminology
@@ -131,8 +140,7 @@ console.log("Results:" + JSON.stringify(results));
 
 //Redirect directly to the card detail page if only 1 result is found.
 if(results.length == 1) {
-    const cardid = results[0].id;
-    return Astro.redirect(`/card/${encodeURIComponent(cardid)}`);
+    return Astro.redirect(`/card/${encodeURIComponent(results[0].id)}`);
 }
 
 ---
@@ -148,7 +156,7 @@ if(results.length == 1) {
     <main>
         <div class="search-info">
             <p>
-            <strong>1 – X of {results.length} cards</strong>
+            <strong>{results.length ? `${offset + 1} – ${offset + results.length} of ${total} cards` : "0 cards found" }</strong>
             <span class="search-summary">where the card types include “creature”</span>
             </p>
         </div>

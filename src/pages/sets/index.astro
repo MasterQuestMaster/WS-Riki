@@ -4,22 +4,33 @@ import SearchHeader from "@layouts/SearchHeader.astro";
 import SearchControls from "@components/header/SearchControls.astro";
 import SetDisplayOptions from "@components/header/SetDisplayOptions.astro";
 
+import { SetTypeSchema, SetOrderSchema, SortDirectionSchema } from "src/schemas/SearchParams";
+
 import { db, Set, Card, eq, count } from 'astro:db';
+import { getOrderConfig } from "@scripts/db-utils";
 import { format } from 'date-fns';
 
-const type = Astro.url.searchParams.get("type") ?? "";
-const order = Astro.url.searchParams.get("order") ?? "rarity";
-const dir = Astro.url.searchParams.get("dir") ?? "asc";
+import orderConfig from "src/config/order-config.json";
+
+const type = SetTypeSchema.catch("").parse(Astro.url.searchParams.get("type"));
+const order = SetOrderSchema.catch("release").parse(Astro.url.searchParams.get("order")?.toLowerCase());
+const dir = SortDirectionSchema.catch("desc").parse(Astro.url.searchParams.get("dir")?.toLowerCase());
+
+const orderCols = getOrderConfig(orderConfig.Set, order, dir, Set.id);
+console.log(type);
 
 const sets = await db.select({
         id: Set.id,
         name: Set.name,
         type: Set.type,
+        releaseNumber: Set.releaseNumber,
         releaseDate: Set.releaseDate,
         cardCount: count(Card.id)
     }).from(Set)
     .leftJoin(Card, eq(Card.setId, Set.id))
-    .groupBy(Set.id);
+    .groupBy(Set.id)
+    .where(type ? eq(Set.type, type) : undefined)
+    .orderBy(...orderCols);
 
 ---
 <MainLayout>
