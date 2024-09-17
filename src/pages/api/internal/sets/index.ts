@@ -26,7 +26,12 @@ export const POST: APIRoute = async ({params, request}) => {
     const setInput = setParse.data;
 
     try {
-        await db.insert(Set).values([setInput]);
+        //get the number inside the set ID (for sorting)
+        const releaseNr = parseInt(setInput.id.match(/\d+$/)?.[0] ?? "0");
+        await db.insert(Set).values({
+            releaseNumber: releaseNr,
+            ...setInput
+        });
 
         return makeJsonResponse({
             setId: setInput.id,

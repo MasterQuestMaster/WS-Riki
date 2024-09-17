@@ -4,13 +4,13 @@
             "label": "Sort by Name",
             "dbColumn": "Card.name"
         },
-        "releaseDate": {
+        "date": {
             "label": "Sort by Set Release Date",
             "dbColumn": "Set.releaseDate"
         },
         "set": {
             "label": "Sort by Set/Number",
-            "dbColumn": "Card.setId"
+            "dbColumn": ["Set.releaseNumber", "Set.id"]
         },
         "rarity": {
             "label": "Sort by Rarity",
@@ -42,7 +42,11 @@
             "label": "Sort by Type",
             "dbColumn": "Set.type"
         },
-        "releaseDate":  {
+        "release": {
+            "label": "Sort by Release",
+            "dbColumn": "Set.releaseNumber"
+        },
+        "date":  {
             "label": "Sort by Release Date",
             "dbColumn": "Set.releaseDate"
         } 

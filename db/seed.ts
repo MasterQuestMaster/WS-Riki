@@ -4,20 +4,10 @@ import { db, Card, Set, Rarity, Color } from 'astro:db';
 export default async function seed() {
 	
 	await db.insert(Set).values([
-		{id: "SE26", name: "Sword Art Online II Vol. 2", shortName:"SAO2V2", type:"Extra Booster", releaseDate: new Date("2016-05-27")},
-		{id: "S106", name: "SPY x FAMILY", type: "Booster Pack", releaseDate: new Date("2024-01-26") },
-		{id: "S92", name: "Tokyo Revengers", type: "Booster Pack", releaseDate: new Date("July 29, 2022")}
+		{id: "SE26", name: "Sword Art Online II Vol. 2", shortName:"SAO2V2", type:"Extra Booster", releaseNumber: 26, releaseDate: new Date("2016-05-27")},
+		{id: "S106", name: "SPY x FAMILY", type: "Booster Pack", releaseNumber: 106, releaseDate: new Date("2024-01-26") },
+		{id: "S92", name: "Tokyo Revengers", type: "Booster Pack", releaseNumber: 92, releaseDate: new Date("July 29, 2022")}
 	]);
-
-	//TODO: add foil rarities.
-
-	//Set-specific rarities:
-	//MDR (Maid Dragon Rare)
-	//HYR (Hanayome Rare)
-	//PXR (Pixar Rare)
-	//DCR (Deculture Rare)
-	//AVGR (Avenger Rare) (probably SEC, > MR)
-	// MR (Marvel Rare)
 
 	let i=1;
 

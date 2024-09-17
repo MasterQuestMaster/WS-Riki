@@ -101,11 +101,12 @@ export function getSet(setId: string) {
  * @param defaultSort always used as secondary condition
  * @returns Array to be used with drizzle "orderBy" func.
  */
-export function getOrderConfig(colConfig: {[key:string]: {dbColumn:string}}, orderKey: string, dir: string, defaultSort: SQL | SQLiteColumn) {  
+export function getOrderConfig(colConfig: {[key:string]: {dbColumn:string|string[]}}, orderKey: string, dir: string, defaultSort: SQL | SQLiteColumn) {  
     if(colConfig[orderKey]) {
-        const orderCol = getColumnFromString(colConfig[orderKey].dbColumn);
+        const dbColumn = colConfig[orderKey].dbColumn;
+        const colArray =  Array.isArray(dbColumn) ? dbColumn : [dbColumn]; 
         const dirFunc = (dir == "desc") ? desc : asc;
-        return [ dirFunc(orderCol), defaultSort ];
+        return [ ...colArray.map(col => dirFunc(getColumnFromString(col))), defaultSort ];
     }
     else {
         return [ defaultSort ];

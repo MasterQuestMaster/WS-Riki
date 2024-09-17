@@ -8,6 +8,7 @@ export const SetDbSchema = z.object({
     name: z.string(),
     shortName: z.string().nullable(),
     type: z.string().nullable(),
+    releaseNumber: z.number(),
     releaseDate: z.coerce.date().nullable(), //coerce uses "new Date()" on the string.
     sha: z.string().nullable()
 });
