@@ -55,6 +55,7 @@
             "dbColumn": [
                 "Set.id",
                 "Set.name",
+                "Card.setName",
                 "Set.shortName"
             ]
         },

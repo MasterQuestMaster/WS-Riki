@@ -21,20 +21,16 @@ import { Icon } from 'astro-icon/components';
 const { cardid = "" } = Astro.params;
 console.log(cardid);
 
-const selectCardResult = await db.select().from(Card)
-    .innerJoin(Set, eq(Card.setId, Set.id))
+const card = await db.select().from(Card)
     .where(eq(Card.id, cardid))
     .get();
 
-if(!selectCardResult) {
+if(!card) {
     return new Response(null, {
         status: 404,
         statusText: 'Not found'
     });
 }
-
-const card = selectCardResult.Card;
-const set = selectCardResult.Set;
 
 const soulTrigger = getTriggerInfo(["soul"])[0];
 
@@ -86,7 +82,7 @@ When formatting ability text, do the following:
                     <div class="card-subheader">
                         <span class="card-number">{card.cardno}</span>
                         <span class="card-rarity">{card.rarity}</span> &mdash;
-                        <a class="set-name" href={`/sets/${set.id}`}>{set.name}</a>
+                        <a class="set-name" href={`/sets/${card.setId}`}>{card.setName}</a>
                     </div>
                     <div class="type-line">
                         <ColorIndicatorSquare color={card.color} />

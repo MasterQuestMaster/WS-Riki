@@ -5,11 +5,11 @@
             "dbColumn": "Card.name"
         },
         "date": {
-            "label": "Sort by Set Release Date",
+            "label": "Sort by Release Date",
             "dbColumn": "Set.releaseDate"
         },
         "set": {
-            "label": "Sort by Set/Number",
+            "label": "Sort by Expansion",
             "dbColumn": ["Set.releaseNumber", "Set.id"]
         },
         "rarity": {

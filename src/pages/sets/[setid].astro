@@ -54,10 +54,10 @@ const cards = await db.select({
         traits: Card.traits,
         image: Card.image,
         icons: Card.icons,
-        setName: Set.name,
+        setName: Card.setName,
         releaseDate: Set.releaseDate
     }).from(Card)
-    .innerJoin(Set, eq(Set.id, Card.setId))
+    .innerJoin(Set, eq(Set.id, Card.setId)) //needed for release date sorting
     .innerJoin(Rarity, eq(Rarity.id, Card.rarity))
     .innerJoin(Color, eq(Color.id, Card.color))
     .where(eq(Card.setId, set.id))

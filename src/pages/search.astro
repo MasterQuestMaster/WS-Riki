@@ -48,8 +48,13 @@ const drizzleFilterParams =  drizzleParser.parseLogicTree(tree);
 //Check if a search for only a single set was made. If so, redirect to /sets/...
 const singleToken = getSingleToken(tree);
 if(singleToken?.type == "expression" && singleToken.keyword == "set") {
+
     //check if exactly 1 set that fits the criteria exists.
-    const setResults = await db.select({id: Set.id}).from(Set).where(drizzleFilterParams);
+    //We have to join Card table because of the "setName" column which should also be searched.
+    const setResults = await db.selectDistinct({id: Set.id})
+        .from(Set)
+        .leftJoin(Card, eq(Card.setId, Set.id))
+        .where(drizzleFilterParams);
 
     if(setResults.length == 1) {
         const setid = setResults[0].id;
@@ -93,6 +98,7 @@ const results = await db.select({
         colorName: Color.name,
         rarity: Card.rarity,
         rarityName: Rarity.name,
+        setName: Card.setName,
         side: Card.side,
         level: Card.level,
         cost: Card.cost,
@@ -102,11 +108,10 @@ const results = await db.select({
         traits: Card.traits,
         image: Card.image,
         icons: Card.icons,
-        setName: Set.name,
         releaseDate: Set.releaseDate
     })
     .from(Card)
-    .innerJoin(Set, eq(Set.id, Card.setId))
+    .innerJoin(Set, eq(Set.id, Card.setId)) //needed for release date sorting.
     .innerJoin(Rarity, eq(Rarity.id, Card.rarity))
     .innerJoin(Color, eq(Color.id, Card.color))
     .where(drizzleFilterParams)

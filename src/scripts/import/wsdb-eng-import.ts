@@ -33,6 +33,7 @@ export function getDbCardFromJson(card: SetFileEntry, setId: string, neoList: Ne
         neo: getNeoStandards(card.set, neoList),
         //We can't use side+release since some card are outliers (Haruhi Swing)
         setId: setId,
+        setName: card.expansion, //can be different for TDs.
         side: card.side,
         level: toNumber(nullIf(card.level, emptyOrDash)),
         cost: toNumber(nullIf(card.cost, emptyOrDash)),

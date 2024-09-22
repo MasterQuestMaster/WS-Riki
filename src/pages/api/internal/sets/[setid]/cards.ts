@@ -53,7 +53,7 @@ export const POST: APIRoute = async ({params, request}) => {
     //Create set if it doesn't exist.
     try {
         //Some sets have a Promo with "PR Card (Weiss Side)" in first slot (also Haruhi PUP), so find a non-promo.
-        const setName = setFile.find(card => card.rarity != "PR")?.expansion ?? setId;
+        const setName = setFile.find(card => card.rarity != "PR" && card.rarity != "TD")?.expansion ?? setId;
         await createSetIfNotExists(setId, setName);
     }
     catch(e: any) {
@@ -92,6 +92,7 @@ export const POST: APIRoute = async ({params, request}) => {
                     rarity: sql`excluded.rarity`,
                     neo: sql`excluded.neo`,
                     setId: sql`excluded.setId`,
+                    setName: sql`excluded.setName`,
                     side: sql`excluded.side`,
                     level: sql`excluded.level`,
                     cost: sql`excluded.cost`,

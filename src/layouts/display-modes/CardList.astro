@@ -1,9 +1,6 @@
 ---
 import ColorIndicator from '@components/ColorIndicator.astro';
-import type ListCardModel from 'src/models/ListCardModel';
-
-//Use a special interface instead of cardmodel because we only select limited columns.
-import rarityConfig from "src/config/rarity-config.json";
+import type ListCardModel from 'src/models/ListCardModel'
 
 interface Props {
     cards: ListCardModel[]

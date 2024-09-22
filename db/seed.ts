@@ -80,6 +80,7 @@ export default async function seed() {
 			rarity: "RR",
 			neo: ["SPY"],
 			setId: "S106",
+			setName: "SxF Trial Deck",
 			side: "S", //W/S
 			level: 0,
 			cost: 0,
@@ -111,6 +112,7 @@ export default async function seed() {
 			rarity: "R",
 			neo: ["SAO"],
 			setId: "SE26",
+			setName: "Sword Art Online II Vol. 2",
 			side: "S", //W/S
 			level: 1,
 			cost: 0,
@@ -139,6 +141,7 @@ export default async function seed() {
 			rarity: "C",
 			neo: ["SAO"],
 			setId: "SE26",
+			setName: "Sword Art Online II Vol. 2",
 			side: "S",
 			trigger: ["SOUL", "RETURN"],
 			abilities: [

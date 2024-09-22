@@ -25,6 +25,7 @@ const Card = defineTable({
     color: column.text({references: () => Color.columns.id}), //Y/R/G/B
     rarity: column.text({references: () => Rarity.columns.id}), //C/U/R/RR...
     setId: column.text({references: () => Set.columns.id}),
+    setName: column.text(), //Can be different than Set.name for TD cards.
     neo: column.json(), //["DAL","Fdl"]
     side: column.text(), //W/S
     level: column.number({optional: true}),
