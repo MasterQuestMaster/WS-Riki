@@ -75,7 +75,7 @@ function groupByRarity(cardList: typeof cards) {
           <div class="set-header-title">
               <h1>{set.name}</h1>        
               <p>{set.type ?? "Unknown Type"} &mdash; {cards.length}&nbsp;cards</p>
-              <p>{set.releaseDate ? `Released&nbsp;${formatDate(set.releaseDate)}` : "Unknown release date"}</p>
+              <p>{set.releaseDate ? `Released ${formatDate(set.releaseDate)}` : "Unknown release date"}</p>
           </div>
 
           <DisplayOptions {displayFormat} {order} {dir} />
